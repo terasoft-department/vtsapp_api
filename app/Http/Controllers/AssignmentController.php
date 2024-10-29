@@ -71,7 +71,7 @@ public function fetchcustomer()
         // Retrieve assignments for the logged-in user where status is null
         $assignments = Assignment::with('customer') // Eager load the customer relationship
             ->where('user_id', Auth::id()) // Filter by the logged-in user's user_id
-            ->whereNull('status') // Only include assignments where status is null
+            ->whereNotNull('status') // Only include assignments where status is null
             ->orderBy('assignment_id', 'desc') // Order by assignment_id descending
             ->get();
 
@@ -106,11 +106,31 @@ public function fetchcustomer()
 public function index1()
 {
     try {
-        // Retrieve assignments for the logged-in user where the status is not null
-        $assignments = Assignment::where('user_id', Auth::id()) // Filter by the logged-in user's user_id
-            ->whereNotNull('status') // Filter where status is not null
+        // Retrieve assignments for the logged-in user where status is null
+        $assignments = Assignment::with('customer') // Eager load the customer relationship
+            ->where('user_id', Auth::id()) // Filter by the logged-in user's user_id
+            ->whereNotNull('status') // Only include assignments where status is null
             ->orderBy('assignment_id', 'desc') // Order by assignment_id descending
             ->get();
+
+        // Map the assignments to include the customer name and days passed since created_at
+        $assignments = $assignments->map(function ($assignment) {
+            // Calculate the days passed since the assignment was created
+            $daysPassed = Carbon::parse($assignment->created_at)->diffInDays(Carbon::now());
+
+            return [
+                'assignment_id' => $assignment->assignment_id,
+                'user_id' => $assignment->user_id,
+                'status' => $assignment->status,
+                'plate_number' => $assignment->plate_number,
+                'customer_phone' => $assignment->customer_phone,
+                'location' => $assignment->location,
+                'assigned_by' => $assignment->assigned_by,
+                'customername' => $assignment->customer->customername ?? 'N/A', // Get customer name, or 'N/A' if not available
+                 'created_at' => $assignment->created_at->format('m-d-Y'),
+                'days_passed' => $daysPassed, // Add the days passed field
+            ];
+        });
 
         // Return the assignments as JSON
         return response()->json([

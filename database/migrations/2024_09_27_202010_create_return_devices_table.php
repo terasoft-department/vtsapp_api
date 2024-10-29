@@ -17,11 +17,9 @@ class CreateReturnDevicesTable extends Migration
             $table->id('return_id'); // Primary key
             $table->foreignId('user_id')->nullable(); // Foreign key to users table
             $table->string('plate_number', 255); // Vehicle plate number
-            $table->foreignId('vehicle_id')->nullable(); // Foreign key to vehicles table
-             $table->foreignId('device_id')->nullable(); // Foreign key to vehicles table
+             $table->foreignId('imei_numner')->nullable(); // Foreign key to vehicles table
             $table->foreignId('customer_id')->nullable(); // Foreign key to customers table
             $table->text('reason'); // Reason for return
-            $table->string('device_category', 255)->nullable(); // Device category
             $table->string('status')->default('pending'); // Status of the return
             $table->timestamps(); // Created at and Updated at timestamps
         });
