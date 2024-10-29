@@ -9,35 +9,32 @@ class JobCard extends Model
 {
     use HasFactory;
 
-    // Set the primary key
+    protected $table = 'job_cards';
+
     protected $primaryKey = 'jobcard_id';
 
-    // Allow mass assignment on the following attributes
-   protected $fillable = [
-    'customer_id',
-    'contact_person',
-    'mobile_number',
-    'vehicle_regNo',
-    'title',
-    'physical_location',
-    'plate_number',
-    'problem_reported',
-    'natureOf_ProblemAt_site',
-    'service_type',
-    'date_attended',
-    'work_done',
-    'imei_number',
-    'client_comment',
-    'user_id',
-     'pre_workdone_picture',
-     'post_workdone_picture',
-     'carPlateNumber_picture',
-     'tampering_evidence_picture',
-];
+    protected $fillable = [
+        'customer_id',
+        'contact_person',
+        'mobile_number',
+        'vehicle_regNo',
+        'title',
+        'physical_location',
+        'plate_number',
+        'problem_reported',
+        'natureOf_ProblemAt_site',
+        'service_type',
+        'date_attended',
+        'work_done',
+        'imei_number',
+        'client_comment',
+        'user_id',
+        'pre_workdone_picture',
+        'post_workdone_picture',
+        'carPlateNumber_picture',
+        'tampering_evidence_picture',
+    ];
 
-
-    // Specify the table name if it's different from the plural of the model name
-    protected $table = 'job_cards';
 
     /**
      * Get the user that created the job card.

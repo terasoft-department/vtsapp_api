@@ -20,9 +20,11 @@ return new class extends Migration
             $table->string('rbt_status')->nullable(); // RBT status
             $table->string('batt_status')->nullable(); // BATT status
             $table->date('check_date')->nullable(); // Date of the check
+             $table->date('status')->nullable(); // Date of the check
             $table->timestamps(); // Adds created_at and updated_at columns
 
         });
+
     }
 
     /**
