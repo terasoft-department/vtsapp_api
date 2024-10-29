@@ -248,7 +248,7 @@ public function countMaster()
 {
     $userId = Auth::id();
     $masterCount = (int) DeviceRequisition::where('user_id', $userId)
-    ->where('status', 'accepted')
+    ->where('status', 'approved')
     ->sum('master');
 
     return response()->json([
@@ -262,7 +262,7 @@ public function countI_button()
 {
     $userId = Auth::id();
     $iButtonCount = (int) DeviceRequisition::where('user_id', $userId)
-    ->where('status', 'accepted')
+    ->where('status', 'approved')
     ->sum('I_button');
 
     return response()->json([
@@ -276,7 +276,7 @@ public function countBuzzer()
 {
     $userId = Auth::id();
     $buzzerCount = (int) DeviceRequisition::where('user_id', $userId)
-    ->where('status', 'accepted')
+    ->where('status', 'approved')
     ->sum('buzzer');
 
     return response()->json([
@@ -290,7 +290,7 @@ public function countPanick_button()
 {
     $userId = Auth::id();
     $panickButtonCount = (int) DeviceRequisition::where('user_id', $userId)
-    ->where('status', 'accepted')
+    ->where('status', 'approved')
     ->sum('panick_button');
 
     return response()->json([
@@ -306,19 +306,19 @@ public function countTotalDevices()
 
     // Fetch total counts for each category
     $masterCount = (int) DeviceRequisition::where('user_id', $userId)
-    ->where('status', 'accepted')
+    ->where('status', 'approved')
     ->sum('master');
 
     $iButtonCount = (int) DeviceRequisition::where('user_id', $userId)
-    ->where('status', 'accepted')
+    ->where('status', 'approved')
     ->sum('I_button');
 
     $buzzerCount = (int) DeviceRequisition::where('user_id', $userId)
-    ->where('status', 'accepted')
+    ->where('status', 'approved')
     ->sum('buzzer');
 
     $panickButtonCount = (int) DeviceRequisition::where('user_id', $userId)
-    ->where('status', 'accepted')
+    ->where('status', 'approved')
     ->sum('panick_button');
 
     // Sum all counts to get the total
