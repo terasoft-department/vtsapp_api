@@ -43,9 +43,9 @@ class CheckList extends Model
         return $this->belongsTo(Vehicle::class, 'vehicle_id', 'vehicle_id');
     }
 
-     public function payment()
+     public function invoice()
     {
-        return $this->belongsTo(Payment::class, 'customername', 'customername');
+        return $this->belongsTo(Invoice::class, 'customername', 'customername');
     }
 
 }

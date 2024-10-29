@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\CheckList;
 use App\Models\Customer;
-use App\Models\Payment;
+use App\Models\Invoice;
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -51,22 +51,22 @@ class CheckListController extends Controller
         ], 404);
     }
 
-    // Now, find the payment information for the customer
-    $payment = Payment::where('customername', $customer->customername)->first();
-    if (!$payment) {
+    // Now, find the invoice information for the customer
+    $invoice = Invoice::where('customername', $customer->customername)->first();
+    if (!$invoice) {
         return response()->json([
             'status' => 'error',
             'message' => 'Payment not found for the customer.',
         ], 404);
     }
 
-    // Return the vehicle, customer, and payment details
+    // Return the vehicle, customer, and invoice details
     return response()->json([
         'status' => 'success',
         'plate_number' => $vehicle->plate_number,
         'customer_id' => $customer->customer_id,
         'vehicle_id' => $vehicle->vehicle_id,
-        'status' => $payment->status,
+        'status' => $invoice->status,
         'vehicle_name' => $vehicle->vehicle_name,
         'customername' => $customer->customername, // Assuming there's a name field
     ], 200);
