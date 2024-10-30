@@ -126,7 +126,7 @@ public function filterByPlateNumber(Request $request)
         // Retrieve returns with related models (vehicle, customer, imeiNumber)
         $returns = ReturnDevice::with(['vehicle', 'customer', 'imeiNumber']) // Include related models
             ->where('user_id', $userId) // Filter by logged-in user
-            ->select('plate_number', 'customer_id', 'reason', 'imei_number') // Select required fields
+            ->select('plate_number', 'customer_id', 'reason', 'imei_number','created_at') // Select required fields
             ->get();
 
         // Check if records exist
