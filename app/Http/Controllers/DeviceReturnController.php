@@ -145,6 +145,7 @@ public function filterByPlateNumber(Request $request)
                 'reason' => $return->reason,
                 'status' => $return->status,
                 'imei_number' => $return->imei_number, // Include imei_number
+                'created_at' => $return->created_at,
             ];
         });
 
