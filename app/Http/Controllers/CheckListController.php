@@ -80,6 +80,7 @@ class CheckListController extends Controller
     ], 200);
 }
 
+
 public function submitChecklist(Request $request)
 {
     // Validate that the request is an array of checklists with the required fields
@@ -103,6 +104,10 @@ public function submitChecklist(Request $request)
         $checkList->plate_number = $checklistData['plate_number'];
         $checkList->rbt_status = $checklistData['rbt_status'];
         $checkList->batt_status = $checklistData['batt_status'];
+
+        // Set check_date to the current date
+        $checkList->check_date = now()->toDateString(); // Use toDateString() for storing as date
+
         $checkList->save(); // Save the checklist entry
     }
 
@@ -111,6 +116,7 @@ public function submitChecklist(Request $request)
         'message' => 'Checklist submitted successfully.',
     ], 201);
 }
+
 
 
 
