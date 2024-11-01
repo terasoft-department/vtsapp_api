@@ -28,4 +28,8 @@ class Vehicle extends Model
     {
         return $this->belongsTo(Customer::class, 'customer_id', 'customer_id');
     }
+
+     public function assignment(){
+        return $this->belongsTo(Assignment::class, 'assignment_id', 'assignment_id');
+     }
 }

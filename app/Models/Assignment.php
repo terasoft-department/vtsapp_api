@@ -43,4 +43,10 @@ class Assignment extends Model
     {
         return $this->belongsTo(User::class, 'user_id', 'id'); // Link 'user_id' to 'id'
     }
+
+    public function vehicle()
+{
+    return $this->belongsTo(Vehicle::class, 'plate_number', 'plate_number');
+}
+
 }

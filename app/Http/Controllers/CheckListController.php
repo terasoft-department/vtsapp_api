@@ -18,7 +18,7 @@ class CheckListController extends Controller
         $this->middleware('auth:sanctum');
     }
 
-  public function autoFillDetails(Request $request)
+ public function autoFillDetails(Request $request)
 {
     // Validate the input for plate_number
     $validator = Validator::make($request->all(), [
@@ -33,42 +33,50 @@ class CheckListController extends Controller
         ], 422);
     }
 
-    // Search for the vehicle using the plate_number
-    $vehicle = Vehicle::where('plate_number', $request->plate_number)->first();
-    if (!$vehicle) {
+    // Search for vehicles with a plate number that contains the input string
+    $vehicles = Vehicle::where('plate_number', 'like', '%' . $request->plate_number . '%')->get();
+
+    if ($vehicles->isEmpty()) {
         return response()->json([
             'status' => 'error',
-            'message' => 'Vehicle not found for the provided plate number.',
+            'message' => 'No vehicles found for the provided plate number.',
         ], 404);
     }
 
-    // Find the customer associated with the vehicle
-    $customer = Customer::find($vehicle->customer_id);
-    if (!$customer) {
+    $data = [];
+
+    foreach ($vehicles as $vehicle) {
+        // Find the customer associated with the vehicle
+        $customer = Customer::find($vehicle->customer_id);
+        if (!$customer) {
+            continue; // Skip if customer not found
+        }
+
+        // Use the relationship to find the invoice or assignment details for the vehicle
+        $invoice = $vehicle->invoice;  // Assuming the relationship `invoice` is defined on `Vehicle` model
+
+        // Collect the details for each matched vehicle
+        $data[] = [
+            'plate_number' => $vehicle->plate_number,
+            'customer_id' => $customer->customer_id,
+            'vehicle_id' => $vehicle->vehicle_id,
+            'status' => $invoice ? $invoice->status : 'No Invoice', // Default status if no invoice found
+            'vehicle_name' => $vehicle->vehicle_name,
+            'customername' => $customer->customername,
+        ];
+    }
+
+    if (empty($data)) {
         return response()->json([
             'status' => 'error',
-            'message' => 'Customer not found for the vehicle.',
+            'message' => 'No records found for the provided plate number.',
         ], 404);
     }
 
-    // Now, find the invoice information for the customer
-    $invoice = Invoice::where('customername', $customer->customername)->first();
-    if (!$invoice) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Payment not found for the customer.',
-        ], 404);
-    }
-
-    // Return the vehicle, customer, and invoice details
+    // Return all matching vehicles with customer and invoice details
     return response()->json([
         'status' => 'success',
-        'plate_number' => $vehicle->plate_number,
-        'customer_id' => $customer->customer_id,
-        'vehicle_id' => $vehicle->vehicle_id,
-        'status' => $invoice->status,
-        'vehicle_name' => $vehicle->vehicle_name,
-        'customername' => $customer->customername, // Assuming there's a name field
+        'data' => $data,
     ], 200);
 }
 
