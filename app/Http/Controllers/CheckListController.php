@@ -104,18 +104,17 @@ public function submitChecklist(Request $request)
         $checkList->plate_number = $checklistData['plate_number'];
         $checkList->rbt_status = $checklistData['rbt_status'];
         $checkList->batt_status = $checklistData['batt_status'];
+        $checkList->check_date = $checklistData['check_date'];
 
-        // Set check_date to the current date
-        $checkList->check_date = now()->toDateString(); // Use toDateString() for storing as date
 
-        $checkList->save(); // Save the checklist entry
+        // Save the checklist entry
+        $checkList->save();
     }
 
-    return response()->json([
-        'status' => 'success',
-        'message' => 'Checklist submitted successfully.',
-    ], 201);
+    // Optionally, you can return a response or redirect
+    return response()->json(['message' => 'Checklists submitted successfully.'], 201);
 }
+
 
 
 
