@@ -80,32 +80,40 @@ class CheckListController extends Controller
     ], 200);
 }
 
-
-  public function submitChecklist(Request $request)
+public function submitChecklist(Request $request)
 {
+    // Validate that the request is an array of checklists with the required fields
     $request->validate([
-        'vehicle_id' => 'required',
-        'customer_id' => 'required',
-        'rbt_status' => 'required|string',
-        'batt_status' => 'required|string',
-        'check_date' => 'required|date',
+        'checklists' => 'required|array',
+        'checklists.*.vehicle_id' => 'required',
+        'checklists.*.customer_id' => 'required',
+        'checklists.*.rbt_status' => 'required|string',
+        'checklists.*.batt_status' => 'required|string',
+        'checklists.*.plate_number' => 'required|string',
     ]);
 
-    $checkList = new CheckList();
-    $checkList->user_id = auth()->id(); // Authenticated user
-    $checkList->vehicle_id = $request->vehicle_id;
-    $checkList->customer_id = $request->customer_id;
-    $checkList->plate_number = $request->plate_number;
-    $checkList->rbt_status = $request->rbt_status;
-    $checkList->batt_status = $request->batt_status;
-    $checkList->check_date = $request->check_date;
-    $checkList->save();
+    $checklistsData = $request->checklists; // Get the checklists array
+
+    // Loop through each checklist entry and save to the database
+    foreach ($checklistsData as $checklistData) {
+        $checkList = new CheckList();
+        $checkList->user_id = auth()->id(); // Set the authenticated user
+        $checkList->vehicle_id = $checklistData['vehicle_id'];
+        $checkList->customer_id = $checklistData['customer_id'];
+        $checkList->plate_number = $checklistData['plate_number'];
+        $checkList->rbt_status = $checklistData['rbt_status'];
+        $checkList->batt_status = $checklistData['batt_status'];
+        $checkList->save(); // Save the checklist entry
+    }
 
     return response()->json([
         'status' => 'success',
-        'message' => 'Checklist submitted successfully!',
+        'message' => 'Checklist submitted successfully.',
     ], 201);
 }
+
+
+
 
 public function filterChecklistByDate(Request $request)
 {
@@ -160,3 +168,19 @@ public function filterChecklistByDate(Request $request)
 
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
