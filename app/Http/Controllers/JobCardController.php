@@ -118,7 +118,6 @@ public function store(Request $request)
         'natureOf_ProblemAt_site' => 'nullable|string',
         'service_type' => 'nullable|string',
         'title' => 'nullable|string',
-        'vehicle_regNo' => 'nullable|string',
         'date_attended' => 'nullable|date',
         'plate_number' => 'nullable|string',
         'imei_number' => 'nullable|string',

@@ -17,7 +17,6 @@ class JobCard extends Model
         'customer_id',
         'contact_person',
         'mobile_number',
-        'vehicle_regNo',
         'title',
         'physical_location',
         'plate_number',
