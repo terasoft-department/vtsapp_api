@@ -94,8 +94,6 @@ public function submitChecklist(Request $request)
     ]);
 
     $checklistsData = $request->checklists; // Get the checklists array
-
-    // Prepare an array to collect any failed saves
     $failedChecks = [];
 
     // Loop through each checklist entry and save to the database
@@ -123,6 +121,7 @@ public function submitChecklist(Request $request)
 
     return response()->json(['message' => 'Some checklists failed to save.', 'failed' => $failedChecks], 400);
 }
+
 
 
 
