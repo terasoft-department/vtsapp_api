@@ -80,7 +80,6 @@ class CheckListController extends Controller
     ], 200);
 }
 
-
 public function submitChecklist(Request $request)
 {
     // Validate that the request is an array of checklists with the required fields
@@ -109,31 +108,20 @@ public function submitChecklist(Request $request)
         $checkList->plate_number = $checklistData['plate_number'];
         $checkList->rbt_status = $checklistData['rbt_status'];
         $checkList->batt_status = $checklistData['batt_status'];
-        // Set check_date if provided, else use null or a default
-        $checkList->check_date = $checklistData['check_date'] ?? null;
+        $checkList->check_date = $checklistData['check_date'];
 
-        // Attempt to save the checklist entry
-        try {
-            $checkList->save();
-        } catch (\Exception $e) {
-            // Collect any failures
-            $failedChecks[] = [
-                'data' => $checklistData,
-                'error' => $e->getMessage(),
-            ];
+        // Attempt to save the checklist, catch any errors
+        if (!$checkList->save()) {
+            $failedChecks[] = $checklistData; // Collect failed entries
         }
     }
 
-    // Determine the response based on whether any saves failed
-    if (!empty($failedChecks)) {
-        return response()->json([
-            'message' => 'Some checklists were not submitted successfully.',
-            'failed' => $failedChecks,
-        ], 207); // Multi-Status response
+    // Provide feedback on successful submissions
+    if (empty($failedChecks)) {
+        return response()->json(['message' => 'All checklists submitted successfully!'], 201);
     }
 
-    // If everything went well
-    return response()->json(['message' => 'Checklists submitted successfully.'], 201);
+    return response()->json(['message' => 'Some checklists failed to save.', 'failed' => $failedChecks], 400);
 }
 
 
