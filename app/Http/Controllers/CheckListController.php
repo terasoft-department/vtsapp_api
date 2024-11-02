@@ -8,6 +8,7 @@ use App\Models\Invoice;
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
@@ -93,34 +94,49 @@ public function submitChecklist(Request $request)
         'checklists.*.check_date' => 'nullable|date', // Make check_date optional
     ]);
 
-    $checklistsData = $request->checklists; // Get the checklists array
-    $failedChecks = [];
+    // Use database transactions to ensure atomicity
+    DB::beginTransaction();
+    try {
+        $checklistsData = $request->checklists; // Get the checklists array
+        $failedChecks = [];
 
-    // Loop through each checklist entry and save to the database
-    foreach ($checklistsData as $checklistData) {
-        // Create a new checklist entry
-        $checkList = new CheckList();
-        $checkList->user_id = auth()->id(); // Set the authenticated user
-        $checkList->vehicle_id = $checklistData['vehicle_id'];
-        $checkList->customer_id = $checklistData['customer_id'];
-        $checkList->plate_number = $checklistData['plate_number'];
-        $checkList->rbt_status = $checklistData['rbt_status'];
-        $checkList->batt_status = $checklistData['batt_status'];
-        $checkList->check_date = $checklistData['check_date'];
+        // Loop through each checklist entry and save to the database
+        foreach ($checklistsData as $checklistData) {
+            // Create a new checklist entry
+            $checkList = new CheckList();
+            $checkList->user_id = auth()->id(); // Set the authenticated user
+            $checkList->vehicle_id = $checklistData['vehicle_id'];
+            $checkList->customer_id = $checklistData['customer_id'];
+            $checkList->plate_number = $checklistData['plate_number'];
+            $checkList->rbt_status = $checklistData['rbt_status'];
+            $checkList->batt_status = $checklistData['batt_status'];
+            $checkList->check_date = $checklistData['check_date'];
 
-        // Attempt to save the checklist, catch any errors
-        if (!$checkList->save()) {
-            $failedChecks[] = $checklistData; // Collect failed entries
+            // Attempt to save the checklist, catch any errors
+            if (!$checkList->save()) {
+                $failedChecks[] = [
+                    'data' => $checklistData,
+                    'error' => 'Failed to save checklist entry.' // Customize error message as needed
+                ];
+            }
         }
-    }
 
-    // Provide feedback on successful submissions
-    if (empty($failedChecks)) {
-        return response()->json(['message' => 'All checklists submitted successfully!'], 201);
-    }
+        // Commit the transaction if all entries saved
+        DB::commit();
 
-    return response()->json(['message' => 'Some checklists failed to save.', 'failed' => $failedChecks], 400);
+        // Provide feedback on successful submissions
+        if (empty($failedChecks)) {
+            return response()->json(['message' => 'All checklists submitted successfully!'], 201);
+        }
+
+        return response()->json(['message' => 'Some checklists failed to save.', 'failed' => $failedChecks], 400);
+
+    } catch (\Exception $e) {
+        DB::rollBack(); // Rollback the transaction in case of an error
+        return response()->json(['message' => 'An error occurred while processing your request.', 'error' => $e->getMessage()], 500);
+    }
 }
+
 
 
 
