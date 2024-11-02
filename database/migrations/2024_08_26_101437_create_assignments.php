@@ -17,8 +17,9 @@ return new class extends Migration
             $table->string('plate_number'); // Plate number
             $table->string('customer_phone'); // Customer phone number
             $table->string('location'); // Location
+              $table->decimal('customer_debt')->nullable();
             $table->integer('user_id')->nullable(); // Foreign key
-            $table->integer('report_id')->nullable(); // Report ID
+             $table->text('case_reported')->nullable();
              $table->integer('imei_number')->nullable();
               $table->integer('assigned_by')->nullable(); // Report ID
              $table->string('status')->nullable();

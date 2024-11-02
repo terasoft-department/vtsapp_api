@@ -41,6 +41,8 @@ class AssignmentController extends Controller
                 'plate_number' => $assignment->plate_number,
                 'customer_phone' => $assignment->customer_phone,
                 'location' => $assignment->location,
+                'case_reported'  => $assignment->case_reported,
+                'customer_debt'  => $assignment->customer_debt,
                 'assigned_by' => $assignment->assigned_by,
                 'customername' => $assignment->customer->customername ?? 'N/A', // Get customer name, or 'N/A' if not available
                  'created_at' => $assignment->created_at->format('m-d-Y'),
@@ -125,6 +127,8 @@ public function index1()
                 'plate_number' => $assignment->plate_number,
                 'customer_phone' => $assignment->customer_phone,
                 'location' => $assignment->location,
+                'case_reported'  => $assignment->case_reported,
+                'customer_debt'  => $assignment->customer_debt,
                 'assigned_by' => $assignment->assigned_by,
                 'customername' => $assignment->customer->customername ?? 'N/A', // Get customer name, or 'N/A' if not available
                  'created_at' => $assignment->created_at->format('m-d-Y'),

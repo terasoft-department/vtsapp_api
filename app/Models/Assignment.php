@@ -22,7 +22,9 @@ class Assignment extends Model
         'user_id', // Link to users table using 'user_id'
         'report_id',
         'status',
-        'assigned_by'
+        'assigned_by',
+        'case_reported',
+        'customer_debt'
     ];
 
     // Specify the table name if it's different from the plural of the model name
