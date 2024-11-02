@@ -91,12 +91,17 @@ public function submitChecklist(Request $request)
         'checklists.*.rbt_status' => 'required|string',
         'checklists.*.batt_status' => 'required|string',
         'checklists.*.plate_number' => 'required|string',
+        'checklists.*.check_date' => 'nullable|date', // Make check_date optional
     ]);
 
     $checklistsData = $request->checklists; // Get the checklists array
 
+    // Prepare an array to collect any failed saves
+    $failedChecks = [];
+
     // Loop through each checklist entry and save to the database
     foreach ($checklistsData as $checklistData) {
+        // Create a new checklist entry
         $checkList = new CheckList();
         $checkList->user_id = auth()->id(); // Set the authenticated user
         $checkList->vehicle_id = $checklistData['vehicle_id'];
@@ -104,19 +109,32 @@ public function submitChecklist(Request $request)
         $checkList->plate_number = $checklistData['plate_number'];
         $checkList->rbt_status = $checklistData['rbt_status'];
         $checkList->batt_status = $checklistData['batt_status'];
-        $checkList->check_date = $checklistData['check_date'];
+        // Set check_date if provided, else use null or a default
+        $checkList->check_date = $checklistData['check_date'] ?? null;
 
-
-        // Save the checklist entry
-        $checkList->save();
+        // Attempt to save the checklist entry
+        try {
+            $checkList->save();
+        } catch (\Exception $e) {
+            // Collect any failures
+            $failedChecks[] = [
+                'data' => $checklistData,
+                'error' => $e->getMessage(),
+            ];
+        }
     }
 
-    // Optionally, you can return a response or redirect
+    // Determine the response based on whether any saves failed
+    if (!empty($failedChecks)) {
+        return response()->json([
+            'message' => 'Some checklists were not submitted successfully.',
+            'failed' => $failedChecks,
+        ], 207); // Multi-Status response
+    }
+
+    // If everything went well
     return response()->json(['message' => 'Checklists submitted successfully.'], 201);
 }
-
-
-
 
 
 
