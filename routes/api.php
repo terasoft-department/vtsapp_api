@@ -12,6 +12,11 @@ use App\Http\Controllers\JobCardAttachmentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\VehicleRegistrationController;
 use App\Http\Controllers\CheckListController;
+use App\Http\Controllers\importDeviceController;
+use App\Http\Controllers\ImportVehicleController;
+use App\Http\Controllers\ImportCustomerController;
+
+
 
 // Public Routes
 Route::get('/login', function () {
@@ -22,6 +27,13 @@ Route::get('/login', function () {
 Route::post('/register_v1', [AuthController::class, 'register']);
 Route::post('/login_v1', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout']);
+
+
+//import routes
+Route::post('/upload-devices', [importDeviceController::class, 'uploadDevices']);
+Route::post('/upload-vehicles', [ImportVehicleController::class, 'uploadVehicles']);
+Route::post('/upload-customers', [ImportCustomerController::class, 'uploadCustomers']);
+
 
 // Protected Routes
 Route::middleware('auth:sanctum')->group(function () {
