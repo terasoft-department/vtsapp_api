@@ -9,21 +9,21 @@ use Illuminate\Support\Facades\Validator;
 
 class AddDevicesController extends Controller
 {
-    // Function to add multiple devices
-public function store(Request $request)
+    public function store(Request $request)
 {
     try {
         // Retrieve all devices from the request
         $devices = $request->all();
 
-        // Initialize an array to hold errors and successful insertions
+        // Initialize arrays to hold errors and successful insertions
         $errors = [];
         $insertedDevices = [];
 
         // Loop through each device and validate
         foreach ($devices as $index => $deviceData) {
+            // Validate each device's data
             $validator = Validator::make($deviceData, [
-                'imei_number' => 'required|unique:devices|numeric',
+                'imei_number' => 'required|numeric',
                 'category' => 'required|string|max:255',
             ]);
 
@@ -33,6 +33,17 @@ public function store(Request $request)
                     'errors' => $validator->errors()
                 ];
                 continue; // Skip to the next device if validation fails
+            }
+
+            // Check if IMEI number already exists
+            $existingDevice = Device::where('imei_number', $deviceData['imei_number'])->first();
+
+            if ($existingDevice) {
+                $errors[] = [
+                    'index' => $index,
+                    'errors' => ['imei_number' => 'This IMEI number already exists.']
+                ];
+                continue; // Skip to the next device if IMEI already exists
             }
 
             // Create the device
@@ -48,7 +59,7 @@ public function store(Request $request)
         if (!empty($errors)) {
             return response()->json([
                 'status' => 'partial success',
-                'message' => 'Some devices could not be added due to validation errors',
+                'message' => 'Some devices could not be added due to validation errors or existing IMEI numbers',
                 'inserted_devices' => $insertedDevices,
                 'errors' => $errors
             ], 207); // 207 Multi-Status
@@ -68,6 +79,7 @@ public function store(Request $request)
         ], 500); // Internal Server Error
     }
 }
+
 
 
     // Function to get all devices
