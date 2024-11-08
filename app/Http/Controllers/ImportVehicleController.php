@@ -14,7 +14,7 @@ class ImportVehicleController extends Controller
         try {
             // Validate that a file is uploaded and has the correct format
             $request->validate([
-                'file' => 'required|mimes:xlsx,xls,csv',
+                'file' => 'mimes:xlsx,xls,csv',
             ]);
 
             // Import data from the uploaded file
