@@ -87,6 +87,7 @@ Route::apiResource('attachments', JobCardAttachmentController::class);
 
 //vehicle route
 Route::apiResource('vehicles', VehicleRegistrationController::class);
+Route::post('/vehicles/register', [VehicleRegistrationController::class, 'registerVehicles']);
 // For filtering by plate number
 Route::post('vehicles/filter', [VehicleRegistrationController::class, 'filter']);
 

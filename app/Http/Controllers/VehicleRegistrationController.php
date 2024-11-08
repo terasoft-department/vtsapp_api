@@ -234,6 +234,31 @@ public function filter(Request $request)
 }
 
 
+public function registerVehicles(Request $request)
+    {
+        try {
+            $vehicle = new Vehicle([
+                'vehicle_name' => $request->vehicle_name,
+                'category' => $request->category,
+                'plate_number' => $request->plate_number
+            ]);
+
+            $vehicle->save();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Vehicle registered successfully',
+                'vehicle' => $vehicle,
+            ], 201);
+        } catch (\Exception $e) {
+            Log::error('Error registering vehicle: ' . $e->getMessage());
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to register vehicle',
+            ], 500);
+        }
+    }
 }
 
 
