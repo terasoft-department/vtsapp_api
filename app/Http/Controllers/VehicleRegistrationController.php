@@ -42,7 +42,7 @@ class VehicleRegistrationController extends Controller
             'vehicle_name' => 'required|string|max:255',
             'category' => 'required|string|max:255',
             'plate_number' => 'required|string|max:255',
-            'customer_id' => 'required|integer|exists:customers,customer_id',
+            'customer_id' => 'nullable',
         ]);
 
         if ($validator->fails()) {
