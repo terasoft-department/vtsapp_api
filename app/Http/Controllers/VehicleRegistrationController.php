@@ -240,12 +240,25 @@ public function registerVehicles(Request $request)
         $vehicles = $request->all(); // Get the array of vehicles
 
         foreach ($vehicles as $vehicleData) {
+            // Check if the plate number already exists in the database
+            $existingVehicle = Vehicle::where('plate_number', $vehicleData['plate_number'])->first();
+
+            if ($existingVehicle) {
+                // If vehicle with the same plate number exists, return an error
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Vehicle with plate number ' . $vehicleData['plate_number'] . ' is already registered.',
+                ], 400);
+            }
+
+            // Create a new vehicle instance if the plate number is not already registered
             $vehicle = new Vehicle([
                 'vehicle_name' => $vehicleData['vehicle_name'],
                 'category' => $vehicleData['category'],
                 'plate_number' => $vehicleData['plate_number']
             ]);
 
+            // Save the vehicle to the database
             $vehicle->save();
         }
 
@@ -254,6 +267,7 @@ public function registerVehicles(Request $request)
             'message' => 'All vehicles registered successfully',
         ], 201);
     } catch (\Exception $e) {
+        // Log the error and return a failure response
         Log::error('Error registering vehicles: ' . $e->getMessage());
 
         return response()->json([
@@ -262,6 +276,7 @@ public function registerVehicles(Request $request)
         ], 500);
     }
 }
+
 
 
 
