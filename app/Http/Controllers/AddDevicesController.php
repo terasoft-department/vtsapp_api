@@ -9,44 +9,66 @@ use Illuminate\Support\Facades\Validator;
 
 class AddDevicesController extends Controller
 {
-    // Function to add a new device
-    public function store(Request $request)
-    {
-        try {
-            // Validate the request data
-            $validator = Validator::make($request->all(), [
+    // Function to add multiple devices
+public function store(Request $request)
+{
+    try {
+        // Retrieve all devices from the request
+        $devices = $request->all();
+
+        // Initialize an array to hold errors and successful insertions
+        $errors = [];
+        $insertedDevices = [];
+
+        // Loop through each device and validate
+        foreach ($devices as $index => $deviceData) {
+            $validator = Validator::make($deviceData, [
                 'imei_number' => 'required|unique:devices|numeric',
                 'category' => 'required|string|max:255',
             ]);
 
             if ($validator->fails()) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Validation failed',
+                $errors[] = [
+                    'index' => $index,
                     'errors' => $validator->errors()
-                ], 400); // Bad Request
+                ];
+                continue; // Skip to the next device if validation fails
             }
 
-            // Create a new device
+            // Create the device
             $device = Device::create([
-                'imei_number' => $request->imei_number,
-                'category' => $request->category,
+                'imei_number' => $deviceData['imei_number'],
+                'category' => $deviceData['category'],
             ]);
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Device added successfully',
-                'data' => $device
-            ], 201); // Created
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to add device',
-                'error' => $e->getMessage()
-            ], 500); // Internal Server Error
+            $insertedDevices[] = $device;
         }
+
+        // Return a response
+        if (!empty($errors)) {
+            return response()->json([
+                'status' => 'partial success',
+                'message' => 'Some devices could not be added due to validation errors',
+                'inserted_devices' => $insertedDevices,
+                'errors' => $errors
+            ], 207); // 207 Multi-Status
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'All devices added successfully',
+            'inserted_devices' => $insertedDevices
+        ], 201); // Created
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Failed to add devices',
+            'error' => $e->getMessage()
+        ], 500); // Internal Server Error
     }
+}
+
 
     // Function to get all devices
     public function index()
