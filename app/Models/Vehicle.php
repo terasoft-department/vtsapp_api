@@ -14,9 +14,9 @@ class Vehicle extends Model
     // Allow mass assignment on the following attributes
     protected $fillable = [
         'vehicle_name',
-        'customer_id',
         'category',
         'plate_number',
+         'customer_id',
     ];
 
     protected $table = 'vehicles';

@@ -8,16 +8,20 @@ use App\Imports\VehiclesImport;
 
 class ImportVehicleController extends Controller
 {
-    public function uploadVehicles(Request $request)
-    {
-        // Validate that a file is uploaded and it has the correct format
-        $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv|max:2048',
-        ]);
+   public function uploadVehicles(Request $request)
+{
+    $request->validate([
+        'file' => 'required|mimes:xlsx,xls,csv',
+    ]);
 
-        // Import data from the uploaded file
+    try {
         Excel::import(new VehiclesImport, $request->file('file'));
-
         return response()->json(['message' => 'Vehicles uploaded and saved successfully'], 200);
+    } catch (\Exception $e) {
+        // Log the exception message
+        \Log::error('Excel Import Error: ' . $e->getMessage());
+        return response()->json(['message' => 'An error occurred during the import process'], 500);
     }
+}
+
 }
