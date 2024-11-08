@@ -235,29 +235,31 @@ public function filter(Request $request)
 
 
 public function registerVehicles(Request $request)
-    {
-        try {
+{
+    try {
+        $vehicles = $request->all(); // Get the array of vehicles
+
+        foreach ($vehicles as $vehicleData) {
             $vehicle = new Vehicle([
-                'vehicle_name' => $request->vehicle_name,
-                'category' => $request->category,
-                'plate_number' => $request->plate_number
+                'vehicle_name' => $vehicleData['vehicle_name'],
+                'category' => $vehicleData['category'],
+                'plate_number' => $vehicleData['plate_number']
             ]);
 
             $vehicle->save();
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Vehicle registered successfully',
-                'vehicle' => $vehicle,
-            ], 201);
-        } catch (\Exception $e) {
-            Log::error('Error registering vehicle: ' . $e->getMessage());
-
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to register vehicle',
-            ], 500);
         }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'All vehicles registered successfully',
+        ], 201);
+    } catch (\Exception $e) {
+        Log::error('Error registering vehicles: ' . $e->getMessage());
+
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Failed to register vehicles',
+        ], 500);
     }
 }
 
@@ -265,6 +267,7 @@ public function registerVehicles(Request $request)
 
 
 
+}
 
 
 
