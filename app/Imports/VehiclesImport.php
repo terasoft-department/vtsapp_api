@@ -10,9 +10,9 @@ class VehiclesImport implements ToModel
     public function model(array $row)
     {
         return new Vehicle([
-            'vehicle_name' => $row[0],  // Adjust according to the column order in your Excel file
-            'category' => $row[1],
-            'plate_number' => $row[2],
+            'plate_number' => $row[0],
+            'vehicle_name' => $row[1],
+            'category' => $row[2],
         ]);
     }
 }
