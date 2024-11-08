@@ -13,7 +13,7 @@ class importDeviceController extends Controller
     {
         // Validate that a file is uploaded and it has the correct format
         $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv|max:2048',
+            'file' => 'mimes:xlsx,xls,csv|max:2048',
         ]);
 
         // Import data from the uploaded file
