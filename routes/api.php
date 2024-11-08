@@ -15,6 +15,7 @@ use App\Http\Controllers\CheckListController;
 use App\Http\Controllers\importDeviceController;
 use App\Http\Controllers\ImportVehicleController;
 use App\Http\Controllers\ImportCustomerController;
+use App\Http\Controllers\AddDevicesController;
 
 
 
@@ -97,5 +98,11 @@ Route::post('/checklist/submit', [CheckListController::class, 'submitChecklist']
  Route::get('/checklists/count', [CheckListController::class, 'countCheckLists']);
   Route::get('/checklists/status/{status}', [CheckListController::class, 'indexByStatus']);
     Route::post('/filter-by-date', [CheckListController::class, 'filterChecklistByDate']);
+
+
+
+
+// Register the API resource routes for the devices
+Route::apiResource('devices', AddDevicesController::class);
 });
 

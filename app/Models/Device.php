@@ -14,9 +14,8 @@ class Device extends Model
     // Allow mass assignment on the following attributes
     protected $fillable = [
         'imei_number',
-        'device_model',
         'category',
-        'total',
+
     ];
 
     // Specify the table name if it's different from the plural of the model name
