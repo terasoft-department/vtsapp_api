@@ -37,11 +37,17 @@ class DeviceRequisitionController extends Controller
         }
     }
 
-    public function index1()
+     public function index1()
     {
         try {
             $requisitions = DeviceRequisition::where('user_id', Auth::id())
-                ->where('status', 'approved') // Adding the condition for 'approved' status
+                ->where(function ($query) {
+                    $query->where('status', 'approved')
+                        ->orWhere(function ($q) {
+                            $q->where('dispatched_status', 'dispatched')
+                              ->where('dispatched_imeis', '!=', 'available');
+                        });
+                })
                 ->orderBy('requisition_id', 'desc')
                 ->get();
 
@@ -219,28 +225,23 @@ public function store(Request $request)
         }
     }
 
-
-
-     public function countRequisitions()
+    public function countRequisitions()
     {
         try {
+            // Count the total number of requisitions for the logged-in user
             $count = DeviceRequisition::where('user_id', Auth::id())
-                ->where(function ($query) {
-                    $query->where('status', 'approved')
-                        ->orWhere(function ($q) {
-                            $q->where('dispatched_status', 'dispatched')
-                              ->where('dispatched_imeis', '!=', 'available');
-                        });
-                })
                 ->count();
 
+            // Return the count as JSON
             return response()->json([
                 'status' => 'success',
                 'count' => $count,
             ], 200);
         } catch (\Exception $e) {
+            // Log the error message
             Log::error('Error counting requisitions: ' . $e->getMessage());
 
+            // Return an error response
             return response()->json([
                 'status' => 'error',
                 'message' => 'Failed to count requisitions',
@@ -248,7 +249,7 @@ public function store(Request $request)
         }
     }
 
-    public function countMaster()
+   public function countMaster()
     {
         try {
             $masterCount = (int) DeviceRequisition::where('user_id', Auth::id())
@@ -422,7 +423,6 @@ public function store(Request $request)
             ], 500);
         }
     }
-
 
 }
 
