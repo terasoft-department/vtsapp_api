@@ -37,18 +37,11 @@ class DeviceRequisitionController extends Controller
         }
     }
 
-
-  public function index1()
+    public function index1()
     {
         try {
             $requisitions = DeviceRequisition::where('user_id', Auth::id())
-                ->where(function ($query) {
-                    $query->where('status', 'approved')
-                        ->orWhere(function ($q) {
-                            $q->where('dispatched_status', 'dispatched')
-                              ->where('dispatched_imeis', '!=', 'available');
-                        });
-                })
+                ->where('status', 'approved') // Adding the condition for 'approved' status
                 ->orderBy('requisition_id', 'desc')
                 ->get();
 
@@ -65,7 +58,6 @@ class DeviceRequisitionController extends Controller
             ], 500);
         }
     }
-
 
 public function store(Request $request)
 {
@@ -226,6 +218,7 @@ public function store(Request $request)
             ], 500);
         }
     }
+
 
 
      public function countRequisitions()
@@ -429,6 +422,7 @@ public function store(Request $request)
             ], 500);
         }
     }
+
 
 }
 
