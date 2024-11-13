@@ -15,6 +15,7 @@ class Device extends Model
     protected $fillable = [
         'imei_number',
         'category',
+        'dispatched_status'
 
     ];
 

@@ -37,11 +37,18 @@ class DeviceRequisitionController extends Controller
         }
     }
 
-    public function index1()
+
+  public function index1()
     {
         try {
             $requisitions = DeviceRequisition::where('user_id', Auth::id())
-                ->where('status', 'approved') // Adding the condition for 'approved' status
+                ->where(function ($query) {
+                    $query->where('status', 'approved')
+                        ->orWhere(function ($q) {
+                            $q->where('dispatched_status', 'dispatched')
+                              ->where('dispatched_imeis', '!=', 'available');
+                        });
+                })
                 ->orderBy('requisition_id', 'desc')
                 ->get();
 
@@ -58,6 +65,7 @@ class DeviceRequisitionController extends Controller
             ], 500);
         }
     }
+
 
 public function store(Request $request)
 {
@@ -219,23 +227,27 @@ public function store(Request $request)
         }
     }
 
-    public function countRequisitions()
+
+     public function countRequisitions()
     {
         try {
-            // Count the total number of requisitions for the logged-in user
             $count = DeviceRequisition::where('user_id', Auth::id())
+                ->where(function ($query) {
+                    $query->where('status', 'approved')
+                        ->orWhere(function ($q) {
+                            $q->where('dispatched_status', 'dispatched')
+                              ->where('dispatched_imeis', '!=', 'available');
+                        });
+                })
                 ->count();
 
-            // Return the count as JSON
             return response()->json([
                 'status' => 'success',
                 'count' => $count,
             ], 200);
         } catch (\Exception $e) {
-            // Log the error message
             Log::error('Error counting requisitions: ' . $e->getMessage());
 
-            // Return an error response
             return response()->json([
                 'status' => 'error',
                 'message' => 'Failed to count requisitions',
@@ -243,98 +255,180 @@ public function store(Request $request)
         }
     }
 
-// Count master devices
-public function countMaster()
-{
-    $userId = Auth::id();
-    $masterCount = (int) DeviceRequisition::where('user_id', $userId)
-    ->where('status', 'approved')
-    ->sum('master');
+    public function countMaster()
+    {
+        try {
+            $masterCount = (int) DeviceRequisition::where('user_id', Auth::id())
+                ->where('status', 'approved')
+                ->where(function ($query) {
+                    $query->where('status', 'approved')
+                        ->orWhere(function ($q) {
+                            $q->where('dispatched_status', 'dispatched')
+                              ->where('dispatched_imeis', '!=', 'available');
+                        });
+                })
+                ->sum('master');
 
-    return response()->json([
-        'status' => 'success',
-        'master_count' => $masterCount
-    ], 200);
-}
+            return response()->json([
+                'status' => 'success',
+                'master_count' => $masterCount
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Error counting master devices: ' . $e->getMessage());
 
-// Count I_button devices
-public function countI_button()
-{
-    $userId = Auth::id();
-    $iButtonCount = (int) DeviceRequisition::where('user_id', $userId)
-    ->where('status', 'approved')
-    ->sum('I_button');
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to count master devices',
+            ], 500);
+        }
+    }
 
-    return response()->json([
-        'status' => 'success',
-        'i_button_count' => $iButtonCount
-    ], 200);
-}
+    public function countI_button()
+    {
+        try {
+            $iButtonCount = (int) DeviceRequisition::where('user_id', Auth::id())
+                ->where('status', 'approved')
+                ->where(function ($query) {
+                    $query->where('status', 'approved')
+                        ->orWhere(function ($q) {
+                            $q->where('dispatched_status', 'dispatched')
+                              ->where('dispatched_imeis', '!=', 'available');
+                        });
+                })
+                ->sum('I_button');
 
-// Count buzzer devices
-public function countBuzzer()
-{
-    $userId = Auth::id();
-    $buzzerCount = (int) DeviceRequisition::where('user_id', $userId)
-    ->where('status', 'approved')
-    ->sum('buzzer');
+            return response()->json([
+                'status' => 'success',
+                'i_button_count' => $iButtonCount
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Error counting I_button devices: ' . $e->getMessage());
 
-    return response()->json([
-        'status' => 'success',
-        'buzzer_count' => $buzzerCount
-    ], 200);
-}
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to count I_button devices',
+            ], 500);
+        }
+    }
 
-// Count panick_button devices
-public function countPanick_button()
-{
-    $userId = Auth::id();
-    $panickButtonCount = (int) DeviceRequisition::where('user_id', $userId)
-    ->where('status', 'approved')
-    ->sum('panick_button');
+    public function countBuzzer()
+    {
+        try {
+            $buzzerCount = (int) DeviceRequisition::where('user_id', Auth::id())
+                ->where('status', 'approved')
+                ->where(function ($query) {
+                    $query->where('status', 'approved')
+                        ->orWhere(function ($q) {
+                            $q->where('dispatched_status', 'dispatched')
+                              ->where('dispatched_imeis', '!=', 'available');
+                        });
+                })
+                ->sum('buzzer');
 
-    return response()->json([
-        'status' => 'success',
-        'panick_button_count' => $panickButtonCount
-    ], 200);
-}
+            return response()->json([
+                'status' => 'success',
+                'buzzer_count' => $buzzerCount
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Error counting buzzer devices: ' . $e->getMessage());
 
-// Count total devices across all categories (master, I_button, buzzer, panick_button)
-public function countTotalDevices()
-{
-    $userId = Auth::id();
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to count buzzer devices',
+            ], 500);
+        }
+    }
 
-    // Fetch total counts for each category
-    $masterCount = (int) DeviceRequisition::where('user_id', $userId)
-    ->where('status', 'approved')
-    ->sum('master');
+    public function countPanick_button()
+    {
+        try {
+            $panickButtonCount = (int) DeviceRequisition::where('user_id', Auth::id())
+                ->where('status', 'approved')
+                ->where(function ($query) {
+                    $query->where('status', 'approved')
+                        ->orWhere(function ($q) {
+                            $q->where('dispatched_status', 'dispatched')
+                              ->where('dispatched_imeis', '!=', 'available');
+                        });
+                })
+                ->sum('panick_button');
 
-    $iButtonCount = (int) DeviceRequisition::where('user_id', $userId)
-    ->where('status', 'approved')
-    ->sum('I_button');
+            return response()->json([
+                'status' => 'success',
+                'panick_button_count' => $panickButtonCount
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Error counting panick_button devices: ' . $e->getMessage());
 
-    $buzzerCount = (int) DeviceRequisition::where('user_id', $userId)
-    ->where('status', 'approved')
-    ->sum('buzzer');
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to count panick_button devices',
+            ], 500);
+        }
+    }
 
-    $panickButtonCount = (int) DeviceRequisition::where('user_id', $userId)
-    ->where('status', 'approved')
-    ->sum('panick_button');
+    public function countTotalDevices()
+    {
+        try {
+            $masterCount = (int) DeviceRequisition::where('user_id', Auth::id())
+                ->where('status', 'approved')
+                ->where(function ($query) {
+                    $query->where('status', 'approved')
+                        ->orWhere(function ($q) {
+                            $q->where('dispatched_status', 'dispatched')
+                              ->where('dispatched_imeis', '!=', 'available');
+                        });
+                })
+                ->sum('master');
 
-    // Sum all counts to get the total
-    $totalDevices = $masterCount + $iButtonCount + $buzzerCount + $panickButtonCount;
+            $iButtonCount = (int) DeviceRequisition::where('user_id', Auth::id())
+                ->where('status', 'approved')
+                ->where(function ($query) {
+                    $query->where('status', 'approved')
+                        ->orWhere(function ($q) {
+                            $q->where('dispatched_status', 'dispatched')
+                              ->where('dispatched_imeis', '!=', 'available');
+                        });
+                })
+                ->sum('I_button');
 
-    return response()->json([
-        'status' => 'success',
-        'total_devices' => $totalDevices,
-        'details' => [
-            'master_count' => $masterCount,
-            'i_button_count' => $iButtonCount,
-            'buzzer_count' => $buzzerCount,
-            'panick_button_count' => $panickButtonCount
-        ]
-    ], 200);
-}
+            $buzzerCount = (int) DeviceRequisition::where('user_id', Auth::id())
+                ->where('status', 'approved')
+                ->where(function ($query) {
+                    $query->where('status', 'approved')
+                        ->orWhere(function ($q) {
+                            $q->where('dispatched_status', 'dispatched')
+                              ->where('dispatched_imeis', '!=', 'available');
+                        });
+                })
+                ->sum('buzzer');
+
+            $panickButtonCount = (int) DeviceRequisition::where('user_id', Auth::id())
+                ->where('status', 'approved')
+                ->where(function ($query) {
+                    $query->where('status', 'approved')
+                        ->orWhere(function ($q) {
+                            $q->where('dispatched_status', 'dispatched')
+                              ->where('dispatched_imeis', '!=', 'available');
+                        });
+                })
+                ->sum('panick_button');
+
+            $totalDevices = $masterCount + $iButtonCount + $buzzerCount + $panickButtonCount;
+
+            return response()->json([
+                'status' => 'success',
+                'total_devices' => $totalDevices
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Error counting total devices: ' . $e->getMessage());
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to count total devices',
+            ], 500);
+        }
+    }
 
 }
 
