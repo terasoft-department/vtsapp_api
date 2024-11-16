@@ -99,8 +99,9 @@ Route::post('/checklist/submit', [CheckListController::class, 'submitChecklist']
   Route::get('/checklists/status/{status}', [CheckListController::class, 'indexByStatus']);
     Route::post('/filter-by-date', [CheckListController::class, 'filterChecklistByDate']);
 
-
-
+Route::get('/all-checklists', [CheckListController::class, 'allChecklist']);
+Route::get('/checklist/{check_id}', [CheckListController::class, 'showChecklist']);
+Route::put('/checklist/{check_id}', [CheckListController::class, 'editChecklist']);
 
 // Register the API resource routes for the devices
 Route::apiResource('devices', AddDevicesController::class);

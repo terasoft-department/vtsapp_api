@@ -138,6 +138,123 @@ public function submitChecklist(Request $request)
 }
 
 
+// Fetch checklists for logged-in user
+public function allChecklist(Request $request)
+{
+    try {
+        $checklists = CheckList::where('user_id', Auth::id())
+            ->with(['vehicle', 'customer'])
+            ->get();
+
+        if ($checklists->isEmpty()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No checklist records found.',
+            ], 404);
+        }
+
+        $response = $checklists->map(function ($checklist) {
+            return [
+                'check_id' => $checklist->check_id,
+                'plate_number' => $checklist->plate_number,
+                'vehicle_name' => $checklist->vehicle->vehicle_name ?? 'Unknown Vehicle',
+                'customername' => $checklist->customer->customername ?? 'Unknown Customer',
+                'rbt_status' => $checklist->rbt_status,
+                'check_date' => $checklist->check_date,
+                'batt_status' => $checklist->batt_status,
+            ];
+        });
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Checklists retrieved successfully.',
+            'data' => $response,
+        ], 200);
+    } catch (\Exception $e) {
+        Log::error($e->getMessage());
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Failed to retrieve checklist records.',
+        ], 500);
+    }
+}
+
+// Show a specific checklist by check_id
+public function showChecklist($check_id)
+{
+    try {
+        $checklist = CheckList::where('check_id', $check_id)
+            ->where('user_id', Auth::id())
+            ->with(['vehicle', 'customer'])
+            ->first();
+
+        if (!$checklist) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Checklist not found or you do not have permission to view this checklist.',
+            ], 404);
+        }
+
+        $response = [
+            'check_id' => $checklist->check_id,
+            'plate_number' => $checklist->plate_number,
+            'vehicle_name' => $checklist->vehicle->vehicle_name ?? 'Unknown Vehicle',
+            'customername' => $checklist->customer->customername ?? 'Unknown Customer',
+            'rbt_status' => $checklist->rbt_status,
+            'batt_status' => $checklist->batt_status,
+        ];
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Checklist retrieved successfully.',
+            'data' => $response,
+        ], 200);
+    } catch (\Exception $e) {
+        Log::error($e->getMessage());
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Failed to retrieve checklist record.',
+        ], 500);
+    }
+}
+
+// Edit a checklist by check_id
+public function editChecklist(Request $request, $check_id)
+{
+    $request->validate([
+        'rbt_status' => 'required|string',
+        'batt_status' => 'required|string',
+    ]);
+
+    try {
+        $checklist = CheckList::where('check_id', $check_id)
+            ->where('user_id', Auth::id())
+            ->first();
+
+        if (!$checklist) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Checklist not found or you do not have permission to edit this checklist.',
+            ], 404);
+        }
+
+        $checklist->rbt_status = $request->rbt_status;
+        $checklist->batt_status = $request->batt_status;
+        $checklist->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Checklist updated successfully.',
+            'data' => $checklist,
+        ], 200);
+    } catch (\Exception $e) {
+        Log::error($e->getMessage());
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Failed to update checklist record.',
+        ], 500);
+    }
+}
 
 
 
