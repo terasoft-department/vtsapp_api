@@ -179,7 +179,7 @@ public function allChecklist(Request $request)
     }
 }
 
-// Show a specific checklist by check_id
+
 public function showChecklist($check_id)
 {
     try {
@@ -219,9 +219,6 @@ public function showChecklist($check_id)
 }
 
 
-
-
-// Edit a checklist by check_id
 public function editChecklist(Request $request, $check_id)
 {
     // Validate the request data
@@ -237,7 +234,7 @@ public function editChecklist(Request $request, $check_id)
             ->first();
 
         if (!$checklist) {
-            return response()->json(['status' => 'error', 'message' => 'Checklist not found'], 404);
+            return response()->json(['status' => 'error', 'message' => 'Checklist not found or unauthorized'], 404);
         }
 
         // Update the checklist fields
@@ -247,9 +244,11 @@ public function editChecklist(Request $request, $check_id)
 
         return response()->json(['status' => 'success', 'message' => 'Checklist updated successfully']);
     } catch (\Exception $e) {
-        return response()->json(['status' => 'error', 'message' => 'Failed to update checklist: ' . $e->getMessage()]);
+        Log::error($e->getMessage());
+        return response()->json(['status' => 'error', 'message' => 'Failed to update checklist: ' . $e->getMessage()], 500);
     }
 }
+
 
 
 
