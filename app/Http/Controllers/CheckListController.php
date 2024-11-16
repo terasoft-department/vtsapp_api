@@ -137,11 +137,14 @@ public function submitChecklist(Request $request)
     }
 }
 
+
+
 public function allChecklist(Request $request)
 {
     try {
         $checklists = CheckList::where('user_id', Auth::user()->user_id) // Use `user_id` instead of `id`
             ->with(['vehicle', 'customer'])
+            ->orderBy('check_id', 'desc') // Add ORDER BY check_id DESC
             ->get();
 
         if ($checklists->isEmpty()) {
@@ -176,6 +179,7 @@ public function allChecklist(Request $request)
         ], 500);
     }
 }
+
 
 
 
