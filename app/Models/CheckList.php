@@ -9,6 +9,9 @@ class CheckList extends Model
 {
     use HasFactory;
 
+    protected $primaryKey = 'check_id';
+
+
     /**
      * The attributes that are mass assignable.
      *
