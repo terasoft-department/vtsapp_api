@@ -222,8 +222,8 @@ public function showChecklist($check_id)
 public function editChecklist(Request $request, $check_id)
 {
     $request->validate([
-        'rbt_status' => 'required|string',
-        'batt_status' => 'required|string',
+        'rbt_status' => 'required|string|in:active,not active',
+        'batt_status' => 'required|string|in:active,not active',
     ]);
 
     try {
@@ -255,6 +255,7 @@ public function editChecklist(Request $request, $check_id)
         ], 500);
     }
 }
+
 
 
 
