@@ -137,12 +137,10 @@ public function submitChecklist(Request $request)
     }
 }
 
-
-// Fetch checklists for logged-in user
 public function allChecklist(Request $request)
 {
     try {
-        $checklists = CheckList::where('user_id', Auth::id())
+        $checklists = CheckList::where('user_id', Auth::user()->user_id) // Use `user_id` instead of `id`
             ->with(['vehicle', 'customer'])
             ->get();
 
@@ -180,11 +178,13 @@ public function allChecklist(Request $request)
 }
 
 
+
 public function showChecklist($check_id)
 {
     try {
+        // Check if the checklist belongs to the authenticated user
         $checklist = CheckList::where('check_id', $check_id)
-            ->where('user_id', Auth::id())
+            ->where('user_id', Auth::user()->user_id) // Use `user_id` instead of `id`
             ->with(['vehicle', 'customer'])
             ->first();
 
@@ -230,7 +230,7 @@ public function editChecklist(Request $request, $check_id)
     try {
         // Find the checklist by check_id and user_id
         $checklist = CheckList::where('check_id', $check_id)
-            ->where('user_id', auth()->user()->id)
+            ->where('user_id', auth()->user()->user_id) // Ensure the user owns the checklist
             ->first();
 
         if (!$checklist) {
