@@ -218,6 +218,9 @@ public function showChecklist($check_id)
     }
 }
 
+
+
+
 // Edit a checklist by check_id
 public function editChecklist(Request $request, $check_id)
 {
@@ -230,37 +233,23 @@ public function editChecklist(Request $request, $check_id)
     try {
         // Find the checklist by check_id and user_id
         $checklist = CheckList::where('check_id', $check_id)
-            ->where('user_id', Auth::id())
+            ->where('user_id', auth()->user()->id)
             ->first();
 
         if (!$checklist) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Checklist not found or you do not have permission to edit this checklist.',
-            ], 404);
+            return response()->json(['status' => 'error', 'message' => 'Checklist not found'], 404);
         }
 
-        // Update the checklist with new data
-        $checklist->rbt_status = $request->rbt_status;
-        $checklist->batt_status = $request->batt_status;
+        // Update the checklist fields
+        $checklist->rbt_status = $request->input('rbt_status');
+        $checklist->batt_status = $request->input('batt_status');
         $checklist->save();
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Checklist updated successfully.',
-            'data' => $checklist,
-        ], 200);
+        return response()->json(['status' => 'success', 'message' => 'Checklist updated successfully']);
     } catch (\Exception $e) {
-        // Log the error and return a generic error message
-        Log::error($e->getMessage());
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Failed to update checklist record.',
-        ], 500);
+        return response()->json(['status' => 'error', 'message' => 'Failed to update checklist: ' . $e->getMessage()]);
     }
 }
-
-
 
 
 
