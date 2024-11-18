@@ -118,7 +118,8 @@ public function index1()
         // Map the assignments to include the customer name and days passed since created_at
         $assignments = $assignments->map(function ($assignment) {
             // Calculate the days passed since the assignment was created
-            $daysPassed = Carbon::parse($assignment->created_at)->diffInDays(Carbon::now());
+            $createdAt = $assignment->created_at ? Carbon::parse($assignment->created_at) : null;
+            $daysPassed = $createdAt ? $createdAt->diffInDays(Carbon::now()) : null;
 
             return [
                 'assignment_id' => $assignment->assignment_id,
@@ -131,10 +132,9 @@ public function index1()
                 'customer_debt' => $assignment->customer_debt,
                 'assigned_by' => $assignment->assigned_by,
                 'customername' => $assignment->customer->customername ?? 'N/A', // Get customer name, or 'N/A' if not available
-                'created_at' => $assignment->created_at->format('m-d-Y'),
+                'created_at' => $createdAt ? $createdAt->format('m-d-Y') : null, // Format only if not null
                 'accepted_at' => $assignment->accepted_at
-                    ? $assignment->accepted_at->format('m-d-Y H:i:s') // Format only if not null
-                    : null, // Return null if accepted_at is null
+                    ? Carbon::parse($assignment->accepted_at)->format('m-d-Y H:i:s') : null,
                 'days_passed' => $daysPassed, // Add the days passed field
             ];
         });
@@ -155,6 +155,7 @@ public function index1()
         ], 500);
     }
 }
+
 
 
 
