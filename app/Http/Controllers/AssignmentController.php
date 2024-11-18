@@ -271,12 +271,12 @@ public function show($id)
         // Update the assignment's status
         $assignment->status = $request->input('status');
 
-        // If the status is accepted or rejected, update the `updated_at` column with the current time
-        if (in_array($assignment->status, ['accepted', 'rejected'])) {
-            $assignment->updated_at = now(); // Automatically sets the current date and time
+        // Check if the status is "accepted" and set the accepted_at timestamp
+        if ($request->input('status') == 'accepted') {
+            // Set the accepted_at timestamp to the current time in East Africa time zone
+            $assignment->accepted_at = Carbon::now('Africa/Nairobi'); // East Africa Time
         }
 
-        // Save the updated assignment
         $assignment->save();
 
         return response()->json([
@@ -293,6 +293,7 @@ public function show($id)
         ], 500);
     }
 }
+
 
 
    public function destroy($id)
