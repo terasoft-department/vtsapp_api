@@ -24,6 +24,7 @@ return new class extends Migration
              $table->integer('imei_number')->nullable();
               $table->integer('assigned_by')->nullable(); // Report ID
              $table->string('status')->nullable();
+             $table->string('accepted_at')->nullable();
             $table->timestamps(); // Adds created_at and updated_at columns
         });
     }

@@ -24,7 +24,8 @@ class Assignment extends Model
         'status',
         'assigned_by',
         'case_reported',
-        'customer_debt'
+        'customer_debt',
+        'accepted_at'
     ];
 
     // Specify the table name if it's different from the plural of the model name
