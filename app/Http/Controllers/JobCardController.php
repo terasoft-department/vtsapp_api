@@ -65,6 +65,9 @@ class JobCardController extends Controller
                   'post_workdone_picture' => $jobCard->post_workdone_picture,
                    'carPlateNumber_picture' => $jobCard->carPlateNumber_picture,
                     'tampering_evidence_picture' => $jobCard->tampering_evidence_picture,
+                    'created_at' => $jobCard->created_at->format('Y-m-d H:i:s'),
+
+
             ];
         });
 
@@ -129,6 +132,7 @@ public function store(Request $request)
         'carPlateNumber_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         'tampering_evidence_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
     ]);
+
 
     // Step 2: Check for validation failures
     if ($validator->fails()) {
