@@ -288,7 +288,7 @@ public function filterChecklistByDate(Request $request)
                 'rbt_status' => $checklist->rbt_status,
                 'check_date' => $checklist->check_date->format('Y-m-d H:i:s'),
                 'batt_status' => $checklist->batt_status,
-             $checklist->created_at->setTimezone('Africa/Dar_es_Salaam')->format('Y-m-d H:i:s')
+                 'created_at' => $checklist->created_at->format('Y-m-d H:i:s'),
             ];
         });
 
