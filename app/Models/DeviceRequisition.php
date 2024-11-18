@@ -23,7 +23,8 @@ class DeviceRequisition extends Model
         'buzzer',
         'panick_button',
          'dispatched_imeis',
-         'dispatched_status'
+         'dispatched_status',
+         'approved_at'
     ];
 
     // Specify the table name if it's different from the plural of the model name

@@ -22,6 +22,7 @@ return new class extends Migration
             $table->integer('buzzer')->default(0); // Buzzer attribute as integer
              $table->text('dispatched_imeis')->default('available');
              $table->text('dispatched_status')->default('available');
+             $table->string('approved_at')->default('nullable');
             $table->integer('panick_button')->default(0); // Panick_button attribute as integer
             $table->timestamps(); // Adds created_at and updated_at columns
         });

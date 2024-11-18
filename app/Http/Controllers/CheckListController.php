@@ -91,7 +91,7 @@ public function submitChecklist(Request $request)
         'checklists.*.rbt_status' => 'required|string',
         'checklists.*.batt_status' => 'required|string',
         'checklists.*.plate_number' => 'required|string',
-        'checklists.*.check_date' => 'nullable|date', // Make check_date optional
+        'checklists.*.check_date' => 'nullable|date',
     ]);
 
     // Use database transactions to ensure atomicity
