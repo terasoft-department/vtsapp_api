@@ -240,52 +240,59 @@ public function show($id)
     }
 }
 
+
   public function update(Request $request, $id)
-    {
-        $validator = Validator::make($request->all(), [
-            'status' => 'required|string|in:accepted,rejected',
-        ]);
+{
+    $validator = Validator::make($request->all(), [
+        'status' => 'required|string|in:accepted,rejected',
+    ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Validation error',
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        try {
-            // Fetch the assignment ensuring it belongs to the logged-in user
-            $assignment = Assignment::where('assignment_id', $id)
-                ->where('user_id', Auth::id())
-                ->first();
-
-            if (!$assignment) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Assignment not found',
-                ], 404);
-            }
-
-            // Update the assignment's status
-            $assignment->status = $request->input('status');
-            $assignment->save();
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Assignment updated successfully',
-                'assignment' => $assignment,
-            ], 200);
-        } catch (\Exception $e) {
-            Log::error('Error updating assignment: ' . $e->getMessage());
-
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to update assignment',
-            ], 500);
-        }
+    if ($validator->fails()) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Validation error',
+            'errors' => $validator->errors(),
+        ], 422);
     }
 
+    try {
+        // Fetch the assignment ensuring it belongs to the logged-in user
+        $assignment = Assignment::where('assignment_id', $id)
+            ->where('user_id', Auth::id())
+            ->first();
+
+        if (!$assignment) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Assignment not found',
+            ], 404);
+        }
+
+        // Update the assignment's status
+        $assignment->status = $request->input('status');
+
+        // If the status is accepted or rejected, update the `updated_at` column with the current time
+        if (in_array($assignment->status, ['accepted', 'rejected'])) {
+            $assignment->updated_at = now(); // Automatically sets the current date and time
+        }
+
+        // Save the updated assignment
+        $assignment->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Assignment updated successfully',
+            'assignment' => $assignment,
+        ], 200);
+    } catch (\Exception $e) {
+        Log::error('Error updating assignment: ' . $e->getMessage());
+
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Failed to update assignment',
+        ], 500);
+    }
+}
 
 
    public function destroy($id)
