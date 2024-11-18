@@ -108,10 +108,10 @@ public function fetchcustomer()
 public function index1()
 {
     try {
-        // Retrieve assignments for the logged-in user where status is null
+        // Retrieve assignments for the logged-in user where status is not null
         $assignments = Assignment::with('customer') // Eager load the customer relationship
             ->where('user_id', Auth::id()) // Filter by the logged-in user's user_id
-            ->whereNotNull('status') // Only include assignments where status is null
+            ->whereNotNull('status') // Only include assignments where status is not null
             ->orderBy('assignment_id', 'desc') // Order by assignment_id descending
             ->get();
 
@@ -127,12 +127,14 @@ public function index1()
                 'plate_number' => $assignment->plate_number,
                 'customer_phone' => $assignment->customer_phone,
                 'location' => $assignment->location,
-                'case_reported'  => $assignment->case_reported,
-                'customer_debt'  => $assignment->customer_debt,
+                'case_reported' => $assignment->case_reported,
+                'customer_debt' => $assignment->customer_debt,
                 'assigned_by' => $assignment->assigned_by,
                 'customername' => $assignment->customer->customername ?? 'N/A', // Get customer name, or 'N/A' if not available
-                 'created_at' => $assignment->created_at->format('m-d-Y'),
-                  'accepted_at' => $assignment->accepted_at->format('m-d-Y H:i:s'),
+                'created_at' => $assignment->created_at->format('m-d-Y'),
+                'accepted_at' => $assignment->accepted_at
+                    ? $assignment->accepted_at->format('m-d-Y H:i:s') // Format only if not null
+                    : null, // Return null if accepted_at is null
                 'days_passed' => $daysPassed, // Add the days passed field
             ];
         });
@@ -153,6 +155,7 @@ public function index1()
         ], 500);
     }
 }
+
 
 
     public function store(Request $request)
