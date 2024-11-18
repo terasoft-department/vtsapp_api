@@ -132,8 +132,7 @@ public function index1()
                 'assigned_by' => $assignment->assigned_by,
                 'customername' => $assignment->customer->customername ?? 'N/A', // Get customer name, or 'N/A' if not available
                  'created_at' => $assignment->created_at->format('m-d-Y'),
-                'days_passed' => $daysPassed,
-                'accepted_at' => $assignment->accepted_at->format('Y-m-d H:i:s'),
+                'days_passed' => $daysPassed, // Add the days passed field
             ];
         });
 
@@ -242,7 +241,7 @@ public function show($id)
 }
 
 
-  public function update(Request $request, $id)
+ public function update(Request $request, $id)
 {
     $validator = Validator::make($request->all(), [
         'status' => 'required|string|in:accepted,rejected',
@@ -294,7 +293,6 @@ public function show($id)
         ], 500);
     }
 }
-
 
 
    public function destroy($id)
