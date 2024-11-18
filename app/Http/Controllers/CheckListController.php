@@ -278,8 +278,8 @@ public function filterChecklistByDate(Request $request)
             ], 404);
         }
 
-        // Format the response
-       $response = $checklists->map(function ($checklist) {
+     // Format the response
+$response = $checklists->map(function ($checklist) {
     // Convert created_at to Dar es Salaam time zone
     $createdAt = new DateTime($checklist->created_at, new DateTimeZone('UTC'));
     $createdAt->setTimezone(new DateTimeZone('Africa/Dar_es_Salaam'));
@@ -299,6 +299,8 @@ public function filterChecklistByDate(Request $request)
         'batt_status' => $checklist->batt_status,
         'created_at' => $createdAt->format('Y-m-d H:i:s'),
     ];
+});
+
 });
 
 
