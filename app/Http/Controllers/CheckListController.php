@@ -278,29 +278,19 @@ public function filterChecklistByDate(Request $request)
             ], 404);
         }
 
-       // Format the response
-$response = $checklists->map(function ($checklist) {
-    // Convert created_at to Dar es Salaam time zone
-    $createdAt = new DateTime($checklist->created_at, new DateTimeZone('UTC'));
-    $createdAt->setTimezone(new DateTimeZone('Africa/Dar_es_Salaam'));
-
-    // Convert check_date to Dar es Salaam time zone
-    $checkDate = new DateTime($checklist->check_date, new DateTimeZone('UTC'));
-    $checkDate->setTimezone(new DateTimeZone('Africa/Dar_es_Salaam'));
-
-    return [
-        'check_id' => $checklist->check_id,
-        'plate_number' => $checklist->plate_number,
-        'vehicle_name' => $checklist->vehicle->vehicle_name ?? 'Unknown Vehicle',
-        'customername' => $checklist->customer->customername ?? 'Unknown Customer',
-        'rbt_status' => $checklist->rbt_status,
-        // Format check_date and created_at in Y-m-d H:i:s format
-        'check_date' => $checkDate->format('Y-m-d H:i:s'),
-        'batt_status' => $checklist->batt_status,
-        'created_at' => $createdAt->format('Y-m-d H:i:s'),
-    ];
-});
-
+        // Format the response
+        $response = $checklists->map(function ($checklist) {
+            return [
+                'check_id' => $checklist->check_id,
+                'plate_number' => $checklist->plate_number,
+                'vehicle_name' => $checklist->vehicle->vehicle_name ?? 'Unknown Vehicle',
+                'customername' => $checklist->customer->customername ?? 'Unknown Customer',
+                'rbt_status' => $checklist->rbt_status,
+                'check_date' => $checklist->check_date->format('Y-m-d H:i:s'),
+                'batt_status' => $checklist->batt_status,
+                'created_at' => $checklist->created_at->format('Y-m-d H:i:s'), // Format created_at for response
+            ];
+        });
 
         return response()->json([
             'status' => 'success',
