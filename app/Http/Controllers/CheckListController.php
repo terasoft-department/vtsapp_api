@@ -286,7 +286,7 @@ public function filterChecklistByDate(Request $request)
                 'vehicle_name' => $checklist->vehicle->vehicle_name ?? 'Unknown Vehicle',
                 'customername' => $checklist->customer->customername ?? 'Unknown Customer',
                 'rbt_status' => $checklist->rbt_status,
-                'check_date' => $checklist->check_date,
+                'check_date' => $checklist->check_date->format('Y-m-d H:i:s'),
                 'batt_status' => $checklist->batt_status,
                 'created_at' => $checklist->created_at->format('Y-m-d H:i:s'), // Format created_at for response
             ];
