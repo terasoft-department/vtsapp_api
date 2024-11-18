@@ -132,6 +132,7 @@ public function index1()
                 'assigned_by' => $assignment->assigned_by,
                 'customername' => $assignment->customer->customername ?? 'N/A', // Get customer name, or 'N/A' if not available
                  'created_at' => $assignment->created_at->format('m-d-Y'),
+                  'accepted_at' => $assignment->accepted_at->format('m-d-Y H:i:s'),
                 'days_passed' => $daysPassed, // Add the days passed field
             ];
         });
