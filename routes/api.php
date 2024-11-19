@@ -16,6 +16,7 @@ use App\Http\Controllers\importDeviceController;
 use App\Http\Controllers\ImportVehicleController;
 use App\Http\Controllers\ImportCustomerController;
 use App\Http\Controllers\AddDevicesController;
+use App\Http\Controllers\NewInstallationController;
 
 
 
