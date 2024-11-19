@@ -51,58 +51,67 @@ class NewInstallationController extends Controller
     }
 
 
-    public function store(Request $request)
-    {
-        // Validate incoming request data
-        $validatedData = $request->validate([
-            'customerName' => 'required|string|max:255',
-            'plateNumber' => 'nullable|string|max:255',
-            'DeviceNumber' => 'nullable|string|max:255',
-            'CarRegNumber' => 'nullable|string|max:255',
-            'customerPhone' => 'nullable|string|max:255',
-            'simCardNumber' => 'nullable|string|max:255',
-            'picha_ya_gari_kwa_mbele' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'picha_ya_device_anayoifunga' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'picha_ya_hiyo_karatasi_ya_simCardNumber' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-        ]);
+   public function store(Request $request)
+{
+    // Step 1: Validate the incoming request with new attributes
+    $validator = Validator::make($request->all(), [
+        'customerName' => 'required|string|max:255',
+        'plateNumber' => 'nullable|string|max:255',
+        'DeviceNumber' => 'nullable|string|max:255',
+        'CarRegNumber' => 'nullable|string|max:255',
+        'customerPhone' => 'nullable|string|max:255',
+        'simCardNumber' => 'nullable|string|max:255',
+        'picha_ya_gari_kwa_mbele' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        'picha_ya_device_anayoifunga' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        'picha_ya_hiyo_karatasi_ya_simCardNumber' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+    ]);
 
-        // Upload images to Cloudinary and store their URLs
-        $imageUrls = [];
-        $imageFields = [
-            'picha_ya_gari_kwa_mbele',
-            'picha_ya_device_anayoifunga',
-            'picha_ya_hiyo_karatasi_ya_simCardNumber'
-        ];
+    // Step 2: Check for validation failures
+    if ($validator->fails()) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Validation error',
+            'errors' => $validator->errors(),
+        ], 422);
+    }
 
-        foreach ($imageFields as $field) {
-            if ($request->hasFile($field)) {
-                $uploadedImage = Cloudinary::upload($request->file($field)->getRealPath(), [
-                    'folder' => 'installations',
-                    'resource_type' => 'image',
-                ]);
-                $imageUrls[$field] = $uploadedImage->getSecurePath();
-            }
-        }
-
-        // Store the installation data in the database
-        $installation = NewInstallation::create([
-            'customerName' => $validatedData['customerName'],
-            'plateNumber' => $validatedData['plateNumber'] ?? null,
-            'DeviceNumber' => $validatedData['DeviceNumber'] ?? null,
-            'CarRegNumber' => $validatedData['CarRegNumber'] ?? null,
-            'customerPhone' => $validatedData['customerPhone'] ?? null,
-            'simCardNumber' => $validatedData['simCardNumber'] ?? null,
-            'picha_ya_gari_kwa_mbele' => $imageUrls['picha_ya_gari_kwa_mbele'] ?? null,
-            'picha_ya_device_anayoifunga' => $imageUrls['picha_ya_device_anayoifunga'] ?? null,
-            'picha_ya_hiyo_karatasi_ya_simCardNumber' => $imageUrls['picha_ya_hiyo_karatasi_ya_simCardNumber'] ?? null,
-            'user_id' => Auth::id(),
-        ]);
+    // Step 3: Upload images to Cloudinary
+    try {
+        $uploadedImages = $this->uploadImages($request);
+    } catch (\Exception $e) {
+        Log::error('Image upload failed: ' . $e->getMessage());
 
         return response()->json([
-            'message' => 'New installation created successfully!',
-            'installation' => $installation
-        ], 201);
+            'status' => 'error',
+            'message' => 'Image upload failed',
+        ], 500);
     }
+
+    // Step 4: Create a new job card
+    try {
+        $jobCard = JobCard::create(array_merge($request->all(), [
+            'user_id' => Auth::id(), // Keep the user_id constant as per the logged-in user
+            // Include uploaded image URLs if available
+            'picha_ya_gari_kwa_mbele' => $uploadedImages['picha_ya_gari_kwa_mbele'] ?? null,
+            'picha_ya_device_anayoifunga' => $uploadedImages['picha_ya_device_anayoifunga'] ?? null,
+            'picha_ya_hiyo_karatasi_ya_simCardNumber' => $uploadedImages['picha_ya_hiyo_karatasi_ya_simCardNumber'] ?? null,
+        ]));
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Job card created successfully',
+            'job_card' => $jobCard,
+        ], 201);
+    } catch (\Exception $e) {
+        Log::error('Error creating job card: ' . $e->getMessage());
+
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Failed to create job card',
+        ], 500);
+    }
+}
+
 
 
     public function show($id)
