@@ -107,13 +107,11 @@ Route::put('/checklist/{check_id}', [CheckListController::class, 'editChecklist'
 // Register the API resource routes for the devices
 Route::apiResource('devices', AddDevicesController::class);
 
-Route::middleware('auth:sanctum')->group(function () {
+//Installation routes
     Route::get('installations', [NewInstallationController::class, 'index']);
     Route::post('installations', [NewInstallationController::class, 'store']);
     Route::get('installations/{id}', [NewInstallationController::class, 'show']);
     Route::put('installations/{id}', [NewInstallationController::class, 'update']);
     Route::delete('installations/{id}', [NewInstallationController::class, 'destroy']);
-});
-
 });
 
