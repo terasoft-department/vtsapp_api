@@ -11,20 +11,9 @@ use Cloudinary\Cloudinary;
 
 class JobCardController extends Controller
 {
-    protected $cloudinary;
-
-    public function __construct()
+   public function __construct()
     {
-        $this->cloudinary = new Cloudinary([
-            'cloud' => [
-                'cloud_name' => config('cloudinary.cloud.cloud_name'),
-                'api_key' => config('cloudinary.cloud.api_key'),
-                'api_secret' => config('cloudinary.cloud.api_secret'),
-            ],
-            'url' => [
-                'secure' => true,
-            ],
-        ]);
+        $this->middleware('auth:sanctum')->except(['register', 'login']);
     }
 
     public function index()
