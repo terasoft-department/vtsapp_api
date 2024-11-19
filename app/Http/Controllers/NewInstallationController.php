@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\NewInstallation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-App\Http\Controllers\JobCard;
+use App\Models\JobCard;
 use Illuminate\Support\Facades\Log;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Support\Facades\Validator;
