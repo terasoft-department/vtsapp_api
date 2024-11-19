@@ -215,4 +215,29 @@ class JobCardController extends Controller
             ], 500);
         }
     }
+
+
+    public function countJobCards()
+{
+    try {
+        // Count the total number of job cards for the logged-in user
+        $count = JobCard::where('user_id', Auth::id())
+            ->count();
+
+        // Return the count as JSON
+        return response()->json([
+            'status' => 'success',
+            'count' => $count,
+        ], 200);
+    } catch (\Exception $e) {
+        // Log the error message
+        Log::error('Error counting job cards: ' . $e->getMessage());
+
+        // Return an error response
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Failed to count job cards',
+        ], 500);
+    }
+}
 }

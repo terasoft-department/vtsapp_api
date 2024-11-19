@@ -51,11 +51,13 @@ class NewInstallationController extends Controller
         }
     }
 
-    public function store(Request $request)
+
+
+public function store(Request $request)
 {
     // Step 1: Validate the incoming request
     $validator = Validator::make($request->all(), [
-        'customerName' => 'nullable|string|max:255',
+       'customerName' => 'nullable|string|max:255',
         'DeviceNumber' => 'nullable|string|max:255',
         'CarRegNumber' => 'nullable|string|max:255',
         'customerPhone' => 'nullable|string|max:20',
@@ -64,6 +66,7 @@ class NewInstallationController extends Controller
         'picha_ya_device_anayoifunga' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
         'picha_ya_hiyo_karatasi_ya_simCardNumber' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
     ]);
+
 
     // Step 2: Check for validation failures
     if ($validator->fails()) {
@@ -74,7 +77,7 @@ class NewInstallationController extends Controller
         ], 422);
     }
 
-    // Step 3: Upload images to Cloudinary (or any image storage system you're using)
+    // Step 3: Upload images to Cloudinary
     try {
         $uploadedImages = $this->uploadImages($request);
     } catch (\Exception $e) {
@@ -86,10 +89,10 @@ class NewInstallationController extends Controller
         ], 500);
     }
 
-    // Step 4: Create a new NewInstallation entry
+    // Step 4: Create a new installation
     try {
-        $newInstallation = NewInstallation::create(array_merge($request->except('user_id'), [
-            'user_id' => Auth::id(), // Associate NewInstallation with logged-in user
+        $newInstallation = NewInstallation::create(array_merge($request->all(), [
+            'user_id' => Auth::id(), // Associate job card with logged-in user
             // Include uploaded image URLs if available
             'picha_ya_gari_kwa_mbele' => $uploadedImages['picha_ya_gari_kwa_mbele'] ?? null,
             'picha_ya_device_anayoifunga' => $uploadedImages['picha_ya_device_anayoifunga'] ?? null,
@@ -98,7 +101,7 @@ class NewInstallationController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'New Installation created successfully',
+            'message' => 'New installation created successfully',
             'new_installation' => $newInstallation,
         ], 201);
     } catch (\Exception $e) {
@@ -106,10 +109,34 @@ class NewInstallationController extends Controller
 
         return response()->json([
             'status' => 'error',
-            'message' => 'Failed to create new installation',
+            'message' => 'Failed to create job card',
         ], 500);
     }
 }
+
+
+private function uploadImages(Request $request)
+    {
+        $uploadedImages = [];
+
+        // Handle each image upload
+        foreach (['picha_ya_gari_kwa_mbele', 'picha_ya_device_anayoifunga', 'picha_ya_hiyo_karatasi_ya_simCardNumber'] as $imageField) {
+            if ($request->hasFile($imageField)) {
+                $file = $request->file($imageField);
+
+                // Upload to Cloudinary
+                $uploadResult = $this->cloudinary->uploadApi()->upload($file->getRealPath(), [
+                    'folder' => 'installations_file', // Optional: Set a folder for organization
+                ]);
+
+                // Store the image URL
+                $uploadedImages[$imageField] = $uploadResult['secure_url'];
+            }
+        }
+
+        return $uploadedImages;
+    }
+
 
     public function show($id)
     {
