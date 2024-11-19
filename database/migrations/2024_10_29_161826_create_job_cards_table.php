@@ -30,7 +30,7 @@ class CreateJobCardsTable extends Migration
             $table->string('workDone')->nullable();
             $table->string('clientComment')->nullable();
             $table->string('service_type');
-            $table->foreignId('user_id');
+            $table->string('user_id');
             $table->timestamps();
         });
     }
