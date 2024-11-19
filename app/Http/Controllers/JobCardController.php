@@ -11,31 +11,99 @@ use Cloudinary\Cloudinary;
 
 class JobCardController extends Controller
 {
-   public function __construct()
+    public function __construct()
     {
+        // Make sure the user is authenticated for all actions except register/login
         $this->middleware('auth:sanctum')->except(['register', 'login']);
     }
 
-    public function index()
+    public function index(Request $request)
     {
+        // Ensure user is authenticated
+        $userId = Auth::id();
+
+        if (!$userId) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'User not authenticated',
+            ], 401); // Unauthorized
+        }
+
         try {
-            $jobCards = JobCard::where('user_id', Auth::id())
-                ->orderBy('id', 'desc')
+            // Fetch job cards based on a jobcard_id or any other condition
+            $jobCards = JobCard::where('user_id', $userId) // Assuming a jobcard has a user_id field
+                ->orderBy('jobcard_id', 'desc') // Ordering by jobcard_id, change this field if necessary
                 ->get();
+
+            // Check if any job cards are found
+            if ($jobCards->isEmpty()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'No job cards found',
+                ], 404); // Not Found
+            }
 
             return response()->json([
                 'status' => 'success',
                 'job_cards' => $jobCards,
-            ], 200);
+            ], 200); // Success
+
         } catch (\Exception $e) {
+            // Log error for debugging purposes
             Log::error('Error fetching job cards: ' . $e->getMessage());
 
             return response()->json([
                 'status' => 'error',
                 'message' => 'Failed to fetch job cards',
-            ], 500);
+                'error' => $e->getMessage(), // Include the error message for debugging
+            ], 500); // Internal Server Error
         }
     }
+
+    // You can also implement a show method if you want to fetch a single job card by jobcard_id
+    public function show($jobcard_id)
+    {
+        // Ensure user is authenticated
+        $userId = Auth::id();
+
+        if (!$userId) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'User not authenticated',
+            ], 401); // Unauthorized
+        }
+
+        try {
+            // Fetch the specific job card by jobcard_id
+            $jobCard = JobCard::where('user_id', $userId) // Ensure this matches your logic
+                ->where('jobcard_id', $jobcard_id)
+                ->first();
+
+            // Check if the job card exists
+            if (!$jobCard) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Job card not found',
+                ], 404); // Not Found
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'job_card' => $jobCard,
+            ], 200); // Success
+
+        } catch (\Exception $e) {
+            // Log the error for debugging
+            Log::error('Error fetching job card: ' . $e->getMessage());
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to fetch job card',
+                'error' => $e->getMessage(), // Include error message in response for debugging
+            ], 500); // Internal Server Error
+        }
+    }
+
 
   public function store(Request $request)
 {
@@ -85,34 +153,6 @@ class JobCardController extends Controller
 }
 
 
-
-    public function show($id)
-    {
-        try {
-            $jobCard = JobCard::where('id', $id)
-                ->where('user_id', Auth::id())
-                ->first();
-
-            if (!$jobCard) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Job card not found or does not belong to the logged-in user',
-                ], 404);
-            }
-
-            return response()->json([
-                'status' => 'success',
-                'job_card' => $jobCard,
-            ], 200);
-        } catch (\Exception $e) {
-            Log::error('Error fetching job card: ' . $e->getMessage());
-
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to fetch job card',
-            ], 500);
-        }
-    }
 
     public function update(Request $request, $id)
     {
