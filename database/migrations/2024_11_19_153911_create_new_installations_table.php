@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('picha_ya_gari_kwa_mbele')->nullable();
             $table->string('picha_ya_device_anayoifunga')->nullable();
             $table->string('picha_ya_hiyo_karatasi_ya_simCardNumber')->nullable();
-            $table->foreignId('user_id');
+            $table->integer('user_id');
             $table->timestamps();
         });
     }

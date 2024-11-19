@@ -30,7 +30,7 @@ class CreateJobCardsTable extends Migration
             $table->string('workDone')->nullable();
             $table->string('clientComment')->nullable();
             $table->string('service_type');
-            $table->string('user_id');
+            $table->integer('user_id');
             $table->timestamps();
         });
     }
@@ -45,3 +45,6 @@ class CreateJobCardsTable extends Migration
         Schema::dropIfExists('job_cards');
     }
 }
+
+
+
