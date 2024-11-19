@@ -10,11 +10,14 @@ use Cloudinary\Cloudinary;
 use Cloudinary\Transformation\Transformation;
 use Illuminate\Support\Facades\Validator;
 
+
 class NewInstallationController extends Controller
 {
+
+        protected $cloudinary;
+
     public function __construct()
     {
-        // Cloudinary is configured in the config file
         $this->cloudinary = new Cloudinary([
             'cloud' => [
                 'cloud_name' => config('cloudinary.cloud.cloud_name'),
@@ -22,7 +25,7 @@ class NewInstallationController extends Controller
                 'api_secret' => config('cloudinary.cloud.api_secret'),
             ],
             'url' => [
-                'secure' => true,
+                'secure' => true, // Use HTTPS
             ],
         ]);
     }
