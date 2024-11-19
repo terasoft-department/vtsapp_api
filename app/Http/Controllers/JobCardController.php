@@ -59,94 +59,115 @@ class JobCardController extends Controller
             ], 500); // Internal Server Error
         }
     }
+
+
 public function show($jobcard_id)
-    {
-        // Ensure the user is authenticated
-        $userId = Auth::id();
+{
+    // Ensure the user is authenticated
+    $userId = Auth::id(); // Get the authenticated user's ID
 
-        if (!$userId) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'User not authenticated',
-            ], 401); // Unauthorized
-        }
-
-        try {
-            // Fetch the specific job card by jobcard_id
-            $jobCard = JobCard::where('user_id', $userId) // Ensure this matches your logic
-                ->where('jobcard_id', $jobcard_id)
-                ->first();
-
-            // Check if the job card exists
-            if (!$jobCard) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Job card not found',
-                ], 404); // Not Found
-            }
-
-            return response()->json([
-                'status' => 'success',
-                'job_card' => $jobCard,
-            ], 200); // Success
-
-        } catch (\Exception $e) {
-            // Log the error for debugging
-            Log::error('Error fetching job card: ' . $e->getMessage());
-
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to fetch job card',
-                'error' => $e->getMessage(), // Include error message in response for debugging
-            ], 500); // Internal Server Error
-        }
+    if (!$userId) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'User not authenticated',
+        ], 401); // Unauthorized
     }
 
-    /**
-     * Update a job card by jobcard_id.
-     */
-    public function update(Request $request, $jobcard_id)
-    {
-        // Validate incoming data
-        $validator = Validator::make($request->all(), [
-            'Clientname' => 'required|string|max:255',
-            'Tel' => 'nullable|string|max:20',
-            'ContactPerson' => 'nullable|string|max:255',
-            'title' => 'nullable|string|max:255',
-            'mobilePhone' => 'nullable|string|max:20',
-            'VehicleRegNo' => 'nullable|string|max:50',
-            'physicalLocation' => 'nullable|string|max:255',
-            'problemReported' => 'nullable|string',
-            'workDone' => 'nullable|string',
-        ]);
+    try {
+        // Fetch the specific job card by jobcard_id and user_id
+        $jobCard = JobCard::where('user_id', $userId)
+            ->where('id', $jobcard_id)  // Using the correct 'id' column for jobcard_id
+            ->first();
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation error',
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        // Find the job card by jobcard_id
-        $jobCard = JobCard::where('jobcard_id', $jobcard_id)->first();
-
+        // Check if the job card exists
         if (!$jobCard) {
             return response()->json([
-                'success' => false,
+                'status' => 'error',
                 'message' => 'Job card not found',
             ], 404); // Not Found
         }
 
-        // Update the job card with the validated data
-        $jobCard->update($request->all());
+        return response()->json([
+            'status' => 'success',
+            'job_card' => $jobCard, // Send back the job card data
+        ], 200); // Success
+
+    } catch (\Exception $e) {
+        // Log the error for debugging
+        Log::error('Error fetching job card: ' . $e->getMessage());
 
         return response()->json([
-            'success' => true,
-            'message' => 'Job card updated successfully',
-            'data' => $jobCard,
-        ], 200); // Success
+            'status' => 'error',
+            'message' => 'Failed to fetch job card',
+            'error' => $e->getMessage(), // Include error message in response for debugging
+        ], 500); // Internal Server Error
     }
+}
+
+
+    /**
+     * Update a job card by jobcard_id.
+     */
+   public function update(Request $request, $jobcard_id)
+{
+    // Ensure the user is authenticated
+    $userId = Auth::id();
+
+    if (!$userId) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'User not authenticated',
+        ], 401); // Unauthorized
+    }
+
+    try {
+        // Fetch the specific job card by jobcard_id and user_id
+        $jobCard = JobCard::where('user_id', $userId)
+            ->where('id', $jobcard_id)  // Correct the column name to 'id' for jobcard_id
+            ->first();
+
+        // Check if the job card exists
+        if (!$jobCard) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Job card not found',
+            ], 404); // Not Found
+        }
+
+        // Validate input data (you can adjust validation rules as needed)
+        $validated = $request->validate([
+            'Clientname' => 'required|string|max:255',
+            'Tel' => 'required|string|max:255',
+            'ContactPerson' => 'required|string|max:255',
+            'title' => 'required|string|max:255',
+            'mobilePhone' => 'required|string|max:255',
+            'VehicleRegNo' => 'required|string|max:255',
+            'physicalLocation' => 'required|string|max:255',
+            'problemReported' => 'required|string',
+            'workDone' => 'required|string',
+        ]);
+
+        // Update the job card
+        $jobCard->update($validated);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Job card updated successfully',
+            'job_card' => $jobCard, // Send back the updated job card
+        ], 200); // Success
+
+    } catch (\Exception $e) {
+        // Log the error for debugging
+        Log::error('Error updating job card: ' . $e->getMessage());
+
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Failed to update job card',
+            'error' => $e->getMessage(), // Include error message in response for debugging
+        ], 500); // Internal Server Error
+    }
+}
+
 
 
   public function store(Request $request)
