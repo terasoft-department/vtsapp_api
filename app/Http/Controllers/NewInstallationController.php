@@ -7,8 +7,9 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Support\Facades\Validator;
-use Cloudinary\Cloudinary;
+
 
 class NewInstallationController extends Controller
 {
@@ -50,7 +51,6 @@ class NewInstallationController extends Controller
     }
 
 
-    // Store a newly created installation.
     public function store(Request $request)
     {
         // Validate incoming request data
@@ -66,9 +66,7 @@ class NewInstallationController extends Controller
             'picha_ya_hiyo_karatasi_ya_simCardNumber' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
-        // Upload the images to Cloudinary if they exist
-        $cloudinary = new Cloudinary();
-
+        // Upload images to Cloudinary and store their URLs
         $imageUrls = [];
         $imageFields = [
             'picha_ya_gari_kwa_mbele',
@@ -78,15 +76,15 @@ class NewInstallationController extends Controller
 
         foreach ($imageFields as $field) {
             if ($request->hasFile($field)) {
-                $uploadedImage = $cloudinary->uploadApi()->upload($request->file($field)->getRealPath(), [
+                $uploadedImage = Cloudinary::upload($request->file($field)->getRealPath(), [
                     'folder' => 'installations',
                     'resource_type' => 'image',
                 ]);
-                $imageUrls[$field] = $uploadedImage['secure_url'];
+                $imageUrls[$field] = $uploadedImage->getSecurePath();
             }
         }
 
-        // Create the new installation and store it in the database
+        // Store the installation data in the database
         $installation = NewInstallation::create([
             'customerName' => $validatedData['customerName'],
             'plateNumber' => $validatedData['plateNumber'] ?? null,
@@ -97,7 +95,7 @@ class NewInstallationController extends Controller
             'picha_ya_gari_kwa_mbele' => $imageUrls['picha_ya_gari_kwa_mbele'] ?? null,
             'picha_ya_device_anayoifunga' => $imageUrls['picha_ya_device_anayoifunga'] ?? null,
             'picha_ya_hiyo_karatasi_ya_simCardNumber' => $imageUrls['picha_ya_hiyo_karatasi_ya_simCardNumber'] ?? null,
-            'user_id' => Auth::id(), // Store the logged-in user's ID
+            'user_id' => Auth::id(),
         ]);
 
         return response()->json([
