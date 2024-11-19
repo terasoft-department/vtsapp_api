@@ -59,11 +59,9 @@ class JobCardController extends Controller
             ], 500); // Internal Server Error
         }
     }
-
-    // You can also implement a show method if you want to fetch a single job card by jobcard_id
-    public function show($jobcard_id)
+public function show($jobcard_id)
     {
-        // Ensure user is authenticated
+        // Ensure the user is authenticated
         $userId = Auth::id();
 
         if (!$userId) {
@@ -102,6 +100,52 @@ class JobCardController extends Controller
                 'error' => $e->getMessage(), // Include error message in response for debugging
             ], 500); // Internal Server Error
         }
+    }
+
+    /**
+     * Update a job card by jobcard_id.
+     */
+    public function update(Request $request, $jobcard_id)
+    {
+        // Validate incoming data
+        $validator = Validator::make($request->all(), [
+            'Clientname' => 'required|string|max:255',
+            'Tel' => 'nullable|string|max:20',
+            'ContactPerson' => 'nullable|string|max:255',
+            'title' => 'nullable|string|max:255',
+            'mobilePhone' => 'nullable|string|max:20',
+            'VehicleRegNo' => 'nullable|string|max:50',
+            'physicalLocation' => 'nullable|string|max:255',
+            'problemReported' => 'nullable|string',
+            'workDone' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        // Find the job card by jobcard_id
+        $jobCard = JobCard::where('jobcard_id', $jobcard_id)->first();
+
+        if (!$jobCard) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Job card not found',
+            ], 404); // Not Found
+        }
+
+        // Update the job card with the validated data
+        $jobCard->update($request->all());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Job card updated successfully',
+            'data' => $jobCard,
+        ], 200); // Success
     }
 
 
@@ -154,44 +198,6 @@ class JobCardController extends Controller
 
 
 
-   public function update(Request $request, $id)
-{
-    $validator = Validator::make($request->all(), [
-        'Clientname' => 'required|string|max:255',
-        'Tel' => 'nullable|string|max:20',
-        'ContactPerson' => 'nullable|string|max:255',
-        'title' => 'nullable|string|max:255',
-        'mobilePhone' => 'nullable|string|max:20',
-        'VehicleRegNo' => 'nullable|string|max:50',
-        'physicalLocation' => 'nullable|string|max:255',
-        'problemReported' => 'nullable|string',
-        'workDone' => 'nullable|string',
-    ]);
-
-    if ($validator->fails()) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Validation error',
-            'errors' => $validator->errors(),
-        ], 422);
-    }
-
-    $jobCard = JobCard::find($id);
-    if (!$jobCard) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Job card not found',
-        ], 404);
-    }
-
-    $jobCard->update($request->all());
-
-    return response()->json([
-        'success' => true,
-        'message' => 'Job card updated successfully',
-        'data' => $jobCard,
-    ], 200);
-}
 
 
     public function destroy($id)
