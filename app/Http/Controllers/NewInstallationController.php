@@ -6,7 +6,8 @@ use App\Models\NewInstallation; // Import the NewInstallation model
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Cloudinary\Cloudinary; 
+use Cloudinary\Transformation\Transformation;
 use Illuminate\Support\Facades\Validator;
 
 class NewInstallationController extends Controller
