@@ -48,7 +48,6 @@ class NewInstallationController extends Controller
     }
 
 
-
 public function store(Request $request)
 {
     // Step 1: Validate the incoming request
@@ -77,7 +76,6 @@ public function store(Request $request)
         $uploadedImages = $this->uploadImages($request);
     } catch (\Exception $e) {
         Log::error('Image upload failed: ' . $e->getMessage());
-
         return response()->json([
             'status' => 'error',
             'message' => 'Image upload failed',
@@ -101,7 +99,6 @@ public function store(Request $request)
         ], 201);
     } catch (\Exception $e) {
         Log::error('Error creating job card: ' . $e->getMessage());
-
         return response()->json([
             'status' => 'error',
             'message' => 'Failed to create job card',
@@ -109,6 +106,38 @@ public function store(Request $request)
     }
 }
 
+
+protected function uploadImages(Request $request)
+{
+    $imageUrls = [];
+
+    // Check and upload each image, if present
+    if ($request->hasFile('picha_ya_gari_kwa_mbele')) {
+        $imageUrls['picha_ya_gari_kwa_mbele'] = $this->uploadImageToCloud($request->file('picha_ya_gari_kwa_mbele'));
+    }
+    if ($request->hasFile('picha_ya_device_anayoifunga')) {
+        $imageUrls['picha_ya_device_anayoifunga'] = $this->uploadImageToCloud($request->file('picha_ya_device_anayoifunga'));
+    }
+    if ($request->hasFile('picha_ya_hiyo_karatasi_ya_simCardNumber')) {
+        $imageUrls['picha_ya_hiyo_karatasi_ya_simCardNumber'] = $this->uploadImageToCloud($request->file('picha_ya_hiyo_karatasi_ya_simCardNumber'));
+    }
+
+    return $imageUrls;
+}
+
+protected function uploadImageToCloud($image)
+{
+    try {
+        // Cloudinary upload
+        $uploadedFile = Cloudinary::upload($image->getRealPath(), [
+            'folder' => 'installations_images', // optional folder name
+        ]);
+        return $uploadedFile->getSecureUrl(); // Return the image URL
+    } catch (\Exception $e) {
+        Log::error('Cloudinary upload failed: ' . $e->getMessage());
+        throw $e; // Rethrow exception for further handling
+    }
+}
 
 
     public function show($id)
