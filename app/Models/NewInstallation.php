@@ -11,7 +11,6 @@ class NewInstallation extends Model
 
      protected $fillable = [
         'customerName',
-        'plateNumber',
         'DeviceNumber',
         'CarRegNumber',
         'customerPhone',

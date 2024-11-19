@@ -56,7 +56,6 @@ class NewInstallationController extends Controller
     // Step 1: Validate the incoming request with new attributes
     $validator = Validator::make($request->all(), [
         'customerName' => 'required|string|max:255',
-        'plateNumber' => 'nullable|string|max:255',
         'DeviceNumber' => 'nullable|string|max:255',
         'CarRegNumber' => 'nullable|string|max:255',
         'customerPhone' => 'nullable|string|max:255',
@@ -146,7 +145,6 @@ class NewInstallationController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'customerName' => 'required|string|max:255',
-            'plateNumber' => 'nullable|string|max:50',
             'DeviceNumber' => 'nullable|string|max:100',
             'CarRegNumber' => 'nullable|string|max:50',
             'customerPhone' => 'nullable|string|max:20',
