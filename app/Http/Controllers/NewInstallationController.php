@@ -51,7 +51,7 @@ class NewInstallationController extends Controller
 
 public function store(Request $request)
 {
-    // Step 1: Validate the incoming request with new attributes
+    // Step 1: Validate the incoming request
     $validator = Validator::make($request->all(), [
         'customerName' => 'required|string|max:255',
         'DeviceNumber' => 'nullable|string|max:255',
@@ -75,7 +75,6 @@ public function store(Request $request)
     // Step 3: Upload images to Cloudinary
     try {
         $uploadedImages = $this->uploadImages($request);
-        Log::info('Images uploaded successfully', $uploadedImages);
     } catch (\Exception $e) {
         Log::error('Image upload failed: ' . $e->getMessage());
 
@@ -85,77 +84,31 @@ public function store(Request $request)
         ], 500);
     }
 
-    // Step 4: Create a new installation record
+    // Step 4: Create a new job card
     try {
-        // Log the request data for debugging
-        Log::info('Creating installation with data:', $request->all());
-
-        // Merge images with request data
-        $installationData = array_merge($request->all(), [
-            'user_id' => Auth::id(),
+        $jobCard = JobCard::create(array_merge($request->all(), [
+            'user_id' => Auth::id(), // Keep the user_id constant as the logged-in user
+            // Include uploaded image URLs if available
             'picha_ya_gari_kwa_mbele' => $uploadedImages['picha_ya_gari_kwa_mbele'] ?? null,
             'picha_ya_device_anayoifunga' => $uploadedImages['picha_ya_device_anayoifunga'] ?? null,
             'picha_ya_hiyo_karatasi_ya_simCardNumber' => $uploadedImages['picha_ya_hiyo_karatasi_ya_simCardNumber'] ?? null,
-        ]);
-
-        // Store the installation in the database
-        $installation = NewInstallation::create($installationData);
-
-        // Log the creation of the installation
-        Log::info('Installation created successfully', ['installation_id' => $installation->id]);
+        ]));
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Installation created successfully',
-            'installation' => $installation,
+            'message' => 'Job card created successfully',
+            'job_card' => $jobCard,
         ], 201);
     } catch (\Exception $e) {
-        Log::error('Error creating installation: ' . $e->getMessage());
+        Log::error('Error creating job card: ' . $e->getMessage());
 
         return response()->json([
             'status' => 'error',
-            'message' => 'Failed to create installation',
+            'message' => 'Failed to create job card',
         ], 500);
     }
 }
 
-// Upload images to Cloudinary
-protected function uploadImages(Request $request)
-{
-    $uploadedImages = [];
-
-    // Upload each image if it exists
-    if ($request->hasFile('picha_ya_gari_kwa_mbele')) {
-        $uploadedImages['picha_ya_gari_kwa_mbele'] = $this->uploadImageToCloud($request->file('picha_ya_gari_kwa_mbele'));
-    }
-    if ($request->hasFile('picha_ya_device_anayoifunga')) {
-        $uploadedImages['picha_ya_device_anayoifunga'] = $this->uploadImageToCloud($request->file('picha_ya_device_anayoifunga'));
-    }
-    if ($request->hasFile('picha_ya_hiyo_karatasi_ya_simCardNumber')) {
-        $uploadedImages['picha_ya_hiyo_karatasi_ya_simCardNumber'] = $this->uploadImageToCloud($request->file('picha_ya_hiyo_karatasi_ya_simCardNumber'));
-    }
-
-    // Log the uploaded images
-    Log::info('Uploaded images:', $uploadedImages);
-
-    return $uploadedImages;
-}
-
-// Upload single image to Cloudinary
-protected function uploadImageToCloud($image)
-{
-    try {
-        $upload = Cloudinary::upload($image->getRealPath(), [
-            'folder' => 'new_installations',
-        ]);
-
-        // Return the secure URL of the uploaded image
-        return $upload->getSecureUrl(); // Cloudinary URL
-    } catch (\Exception $e) {
-        Log::error('Error uploading image to Cloudinary: ' . $e->getMessage());
-        throw new \Exception('Failed to upload image to Cloudinary');
-    }
-}
 
 
     public function show($id)
