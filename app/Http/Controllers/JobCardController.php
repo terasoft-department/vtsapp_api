@@ -154,62 +154,45 @@ class JobCardController extends Controller
 
 
 
-    public function update(Request $request, $id)
-    {
-        $validator = Validator::make($request->all(), [
-            'Clientname' => 'required|string|max:255',
-            'Tel' => 'nullable|string|max:20',
-            'ContactPerson' => 'nullable|string|max:255',
-            'title' => 'nullable|string|max:255',
-            'mobilePhone' => 'nullable|string|max:20',
-            'VehicleRegNo' => 'nullable|string|max:50',
-            'physicalLocation' => 'nullable|string|max:255',
-            'deviceID' => 'nullable|string|max:100',
-            'problemReported' => 'nullable|string',
-            'DateReported' => 'nullable|date',
-            'DateAttended' => 'nullable|date',
-            'natureOfProblem' => 'nullable|string',
-            'workDone' => 'nullable|string',
-            'clientComment' => 'nullable|string',
-            'service_type' => 'required|string|max:255', // Added service_type
-        ]);
+   public function update(Request $request, $id)
+{
+    $validator = Validator::make($request->all(), [
+        'Clientname' => 'required|string|max:255',
+        'Tel' => 'nullable|string|max:20',
+        'ContactPerson' => 'nullable|string|max:255',
+        'title' => 'nullable|string|max:255',
+        'mobilePhone' => 'nullable|string|max:20',
+        'VehicleRegNo' => 'nullable|string|max:50',
+        'physicalLocation' => 'nullable|string|max:255',
+        'problemReported' => 'nullable|string',
+        'workDone' => 'nullable|string',
+    ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Validation error',
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        try {
-            $jobCard = JobCard::where('id', $id)
-                ->where('user_id', Auth::id())
-                ->first();
-
-            if (!$jobCard) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Job card not found',
-                ], 404);
-            }
-
-            $jobCard->update($request->all());
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Job card updated successfully',
-                'job_card' => $jobCard,
-            ], 200);
-        } catch (\Exception $e) {
-            Log::error('Error updating job card: ' . $e->getMessage());
-
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to update job card',
-            ], 500);
-        }
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Validation error',
+            'errors' => $validator->errors(),
+        ], 422);
     }
+
+    $jobCard = JobCard::find($id);
+    if (!$jobCard) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Job card not found',
+        ], 404);
+    }
+
+    $jobCard->update($request->all());
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Job card updated successfully',
+        'data' => $jobCard,
+    ], 200);
+}
+
 
     public function destroy($id)
     {
