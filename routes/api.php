@@ -110,8 +110,8 @@ Route::apiResource('devices', AddDevicesController::class);
 //Installation routes
     Route::get('installations', [NewInstallationController::class, 'index']);
     Route::post('installations', [NewInstallationController::class, 'store']);
-    Route::get('installations/{id}', [NewInstallationController::class, 'show']);
-    Route::put('installations/{id}', [NewInstallationController::class, 'update']);
-    Route::delete('installations/{id}', [NewInstallationController::class, 'destroy']);
+    Route::get('installations/{jobcard_id}', [NewInstallationController::class, 'show']);
+    Route::put('installations/{jobcard_id}', [NewInstallationController::class, 'update']);
+    Route::delete('installations/{jobcard_id}', [NewInstallationController::class, 'destroy']);
 });
 
