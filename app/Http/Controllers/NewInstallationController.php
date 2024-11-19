@@ -47,99 +47,119 @@ class NewInstallationController extends Controller
         }
     }
 
-    public function store(Request $request)
-    {
-        // Step 1: Validate the incoming request with new attributes
-        $validator = Validator::make($request->all(), [
-            'customerName' => 'required|string|max:255',
-            'DeviceNumber' => 'nullable|string|max:255',
-            'CarRegNumber' => 'nullable|string|max:255',
-            'customerPhone' => 'nullable|string|max:255',
-            'simCardNumber' => 'nullable|string|max:255',
-            'picha_ya_gari_kwa_mbele' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'picha_ya_device_anayoifunga' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'picha_ya_hiyo_karatasi_ya_simCardNumber' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+   use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
+
+public function store(Request $request)
+{
+    // Step 1: Validate the incoming request with new attributes
+    $validator = Validator::make($request->all(), [
+        'customerName' => 'required|string|max:255',
+        'DeviceNumber' => 'nullable|string|max:255',
+        'CarRegNumber' => 'nullable|string|max:255',
+        'customerPhone' => 'nullable|string|max:255',
+        'simCardNumber' => 'nullable|string|max:255',
+        'picha_ya_gari_kwa_mbele' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        'picha_ya_device_anayoifunga' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        'picha_ya_hiyo_karatasi_ya_simCardNumber' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+    ]);
+
+    // Step 2: Check for validation failures
+    if ($validator->fails()) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Validation error',
+            'errors' => $validator->errors(),
+        ], 422);
+    }
+
+    // Step 3: Upload images to Cloudinary
+    try {
+        $uploadedImages = $this->uploadImages($request);
+        Log::info('Images uploaded successfully', $uploadedImages);
+    } catch (\Exception $e) {
+        Log::error('Image upload failed: ' . $e->getMessage());
+
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Image upload failed',
+        ], 500);
+    }
+
+    // Step 4: Create a new installation record
+    try {
+        // Log the request data for debugging
+        Log::info('Creating installation with data:', $request->all());
+
+        // Merge images with request data
+        $installationData = array_merge($request->all(), [
+            'user_id' => Auth::id(),
+            'picha_ya_gari_kwa_mbele' => $uploadedImages['picha_ya_gari_kwa_mbele'] ?? null,
+            'picha_ya_device_anayoifunga' => $uploadedImages['picha_ya_device_anayoifunga'] ?? null,
+            'picha_ya_hiyo_karatasi_ya_simCardNumber' => $uploadedImages['picha_ya_hiyo_karatasi_ya_simCardNumber'] ?? null,
         ]);
 
-        // Step 2: Check for validation failures
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Validation error',
-                'errors' => $validator->errors(),
-            ], 422);
-        }
+        // Store the installation in the database
+        $installation = NewInstallation::create($installationData);
 
-        // Step 3: Upload images to Cloudinary
-        try {
-            $uploadedImages = $this->uploadImages($request);
-        } catch (\Exception $e) {
-            Log::error('Image upload failed: ' . $e->getMessage());
+        // Log the creation of the installation
+        Log::info('Installation created successfully', ['installation_id' => $installation->id]);
 
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Image upload failed',
-            ], 500);
-        }
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Installation created successfully',
+            'installation' => $installation,
+        ], 201);
+    } catch (\Exception $e) {
+        Log::error('Error creating installation: ' . $e->getMessage());
 
-        // Step 4: Create a new installation record
-        try {
-            $installation = NewInstallation::create(array_merge($request->all(), [
-                'user_id' => Auth::id(),
-                // Include uploaded image URLs if available
-                'picha_ya_gari_kwa_mbele' => $uploadedImages['picha_ya_gari_kwa_mbele'] ?? null,
-                'picha_ya_device_anayoifunga' => $uploadedImages['picha_ya_device_anayoifunga'] ?? null,
-                'picha_ya_hiyo_karatasi_ya_simCardNumber' => $uploadedImages['picha_ya_hiyo_karatasi_ya_simCardNumber'] ?? null,
-            ]));
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Failed to create installation',
+        ], 500);
+    }
+}
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Installation created successfully',
-                'installation' => $installation,
-            ], 201);
-        } catch (\Exception $e) {
-            Log::error('Error creating installation: ' . $e->getMessage());
+// Upload images to Cloudinary
+protected function uploadImages(Request $request)
+{
+    $uploadedImages = [];
 
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to create installation',
-            ], 500);
-        }
+    // Upload each image if it exists
+    if ($request->hasFile('picha_ya_gari_kwa_mbele')) {
+        $uploadedImages['picha_ya_gari_kwa_mbele'] = $this->uploadImageToCloud($request->file('picha_ya_gari_kwa_mbele'));
+    }
+    if ($request->hasFile('picha_ya_device_anayoifunga')) {
+        $uploadedImages['picha_ya_device_anayoifunga'] = $this->uploadImageToCloud($request->file('picha_ya_device_anayoifunga'));
+    }
+    if ($request->hasFile('picha_ya_hiyo_karatasi_ya_simCardNumber')) {
+        $uploadedImages['picha_ya_hiyo_karatasi_ya_simCardNumber'] = $this->uploadImageToCloud($request->file('picha_ya_hiyo_karatasi_ya_simCardNumber'));
     }
 
-    // Upload images to Cloudinary
-    protected function uploadImages(Request $request)
-    {
-        $uploadedImages = [];
+    // Log the uploaded images
+    Log::info('Uploaded images:', $uploadedImages);
 
-        // Upload each image if it exists
-        if ($request->hasFile('picha_ya_gari_kwa_mbele')) {
-            $uploadedImages['picha_ya_gari_kwa_mbele'] = $this->uploadImageToCloud($request->file('picha_ya_gari_kwa_mbele'));
-        }
-        if ($request->hasFile('picha_ya_device_anayoifunga')) {
-            $uploadedImages['picha_ya_device_anayoifunga'] = $this->uploadImageToCloud($request->file('picha_ya_device_anayoifunga'));
-        }
-        if ($request->hasFile('picha_ya_hiyo_karatasi_ya_simCardNumber')) {
-            $uploadedImages['picha_ya_hiyo_karatasi_ya_simCardNumber'] = $this->uploadImageToCloud($request->file('picha_ya_hiyo_karatasi_ya_simCardNumber'));
-        }
+    return $uploadedImages;
+}
 
-        return $uploadedImages;
+// Upload single image to Cloudinary
+protected function uploadImageToCloud($image)
+{
+    try {
+        $upload = Cloudinary::upload($image->getRealPath(), [
+            'folder' => 'new_installations',
+        ]);
+
+        // Return the secure URL of the uploaded image
+        return $upload->getSecureUrl(); // Cloudinary URL
+    } catch (\Exception $e) {
+        Log::error('Error uploading image to Cloudinary: ' . $e->getMessage());
+        throw new \Exception('Failed to upload image to Cloudinary');
     }
+}
 
-    // Upload single image to Cloudinary
-    protected function uploadImageToCloud($image)
-    {
-        try {
-            $upload = Cloudinary::upload($image->getRealPath(), [
-                'folder' => 'new_installations',
-            ]);
-
-            return $upload->getSecureUrl(); // Cloudinary URL
-        } catch (\Exception $e) {
-            Log::error('Error uploading image to Cloudinary: ' . $e->getMessage());
-            throw new \Exception('Failed to upload image to Cloudinary');
-        }
-    }
 
     public function show($id)
     {
