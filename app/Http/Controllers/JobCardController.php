@@ -48,7 +48,7 @@ class JobCardController extends Controller
         }
     }
 
-   public function store(Request $request)
+  public function store(Request $request)
 {
     // Validate the incoming request data
     $validator = Validator::make($request->all(), [
@@ -66,10 +66,9 @@ class JobCardController extends Controller
         'natureOfProblem' => 'nullable|string',
         'workDone' => 'nullable|string',
         'clientComment' => 'nullable|string',
-        'service_type' => 'required|string|max:255', // Added service_type
+        'service_type' => 'required|string|max:255',
     ]);
 
-    // If validation fails, return an error response
     if ($validator->fails()) {
         return response()->json([
             'status' => 'error',
@@ -79,26 +78,23 @@ class JobCardController extends Controller
     }
 
     try {
-        // Create the job card and store the logged-in user's ID
         $jobCard = JobCard::create($request->all() + ['user_id' => Auth::id()]);
 
-        // Return a success response with the created job card
         return response()->json([
             'status' => 'success',
             'message' => 'Job card created successfully',
             'job_card' => $jobCard,
         ], 201);
     } catch (\Exception $e) {
-        // Log any errors that occur
         Log::error('Error creating job card: ' . $e->getMessage());
 
-        // Return a failure response
         return response()->json([
             'status' => 'error',
             'message' => 'Failed to create job card',
         ], 500);
     }
 }
+
 
 
     public function show($id)
