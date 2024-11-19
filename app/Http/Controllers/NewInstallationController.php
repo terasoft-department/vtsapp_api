@@ -64,7 +64,7 @@ public function store(Request $request)
         'simCardNumber' => 'nullable|string|max:255',
         'picha_ya_gari_kwa_mbele' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
         'picha_ya_device_anayoifunga' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-        'picha_ya_hiyo_karatasi_ya_simCardNumber' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        'picha_ya_hiyo_karatasi_ya_simCardNumber' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
     ]);
 
 
