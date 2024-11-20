@@ -21,7 +21,6 @@ Route::get('/', function () {
 });
 
 
-Route::get('/', [AssignmentController::class, 'showAssignment']);
 
 Route::get('/send-assignment-email/{assignmentId}', function ($assignmentId) {
     // Fetch the assignment based on the ID

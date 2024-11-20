@@ -19,100 +19,53 @@ class AssignmentController extends Controller
         $this->middleware('auth:sanctum')->except(['register', 'login']);
     }
 
-    public function showAssignment()
-    {
-        return view('emails.assignment'); // Assuming you want to return 'emails.assignment' view
-    }
-
   public function index()
-    {
-        try {
-            // Retrieve the most recent assignment for the logged-in user
-            $latestAssignment = Assignment::with('customer')
-                ->where('user_id', Auth::id()) // Filter by the logged-in user's user_id
-                ->whereNull('status') // Only include assignments where status is null
-                ->orderBy('created_at', 'desc') // Order by created_at to get the latest
-                ->first();
+{
+    try {
+        // Retrieve assignments for the logged-in user where status is null
+        $assignments = Assignment::with('customer') // Eager load the customer relationship
+            ->where('user_id', Auth::id()) // Filter by the logged-in user's user_id
+            ->whereNull('status') // Only include assignments where status is null
+            ->orderBy('assignment_id', 'desc') // Order by assignment_id descending
+            ->get();
 
-            // Check if there's a new assignment
-            if ($latestAssignment) {
-                // Get the timestamp of the last assignment retrieved
-                $lastAssignmentTimestamp = session('last_assignment_timestamp', Carbon::now()->subDay()); // Default to a past date
+        // Map the assignments to include the customer name and days passed since created_at
+        $assignments = $assignments->map(function ($assignment) {
+            // Calculate the days passed since the assignment was created
+            $daysPassed = Carbon::parse($assignment->created_at)->diffInDays(Carbon::now());
 
-                // Compare with the latest assignment created_at
-                if ($latestAssignment->created_at > $lastAssignmentTimestamp) {
-                    // Send email to the user
-                    $this->sendNewAssignmentEmail(Auth::user()->email, $latestAssignment);
+            return [
+                'assignment_id' => $assignment->assignment_id,
+                'user_id' => $assignment->user_id,
+                'status' => $assignment->status,
+                'plate_number' => $assignment->plate_number,
+                'customer_phone' => $assignment->customer_phone,
+                'location' => $assignment->location,
+                'case_reported'  => $assignment->case_reported,
+                'customer_debt'  => $assignment->customer_debt,
+                'assigned_by' => $assignment->assigned_by,
+                'customername' => $assignment->customer->customername ?? 'N/A', // Get customer name, or 'N/A' if not available
+                 'created_at' => $assignment->created_at->format('m-d-Y'),
+                'days_passed' => $daysPassed, // Add the days passed field
+            ];
+        });
 
-                    // Update the session with the new assignment's timestamp
-                    session(['last_assignment_timestamp' => $latestAssignment->created_at]);
-                }
-            }
+        // Return the assignments as JSON
+        return response()->json([
+            'status' => 'success',
+            'assignments' => $assignments,
+        ], 200);
+    } catch (\Exception $e) {
+        // Log the error message
+        Log::error('Error fetching assignments: ' . $e->getMessage());
 
-            // Retrieve all assignments for the logged-in user where status is null
-            $assignments = Assignment::with('customer')
-                ->where('user_id', Auth::id()) // Filter by the logged-in user's user_id
-                ->whereNull('status') // Only include assignments where status is null
-                ->orderBy('assignment_id', 'desc') // Order by assignment_id descending
-                ->get();
-
-            // Map the assignments to include customer details and days passed since created_at
-            $assignments = $assignments->map(function ($assignment) {
-                $daysPassed = Carbon::parse($assignment->created_at)->diffInDays(Carbon::now());
-                return [
-                    'assignment_id' => $assignment->assignment_id,
-                    'user_id' => $assignment->user_id,
-                    'status' => $assignment->status,
-                    'plate_number' => $assignment->plate_number,
-                    'customer_phone' => $assignment->customer_phone,
-                    'location' => $assignment->location,
-                    'case_reported'  => $assignment->case_reported,
-                    'customer_debt'  => $assignment->customer_debt,
-                    'assigned_by' => $assignment->assigned_by,
-                    'customername' => $assignment->customer->customername ?? 'N/A', // Get customer name, or 'N/A' if not available
-                    'created_at' => $assignment->created_at->format('m-d-Y'),
-                    'days_passed' => $daysPassed, // Add the days passed field
-                ];
-            });
-
-            return response()->json([
-                'status' => 'success',
-                'assignments' => $assignments,
-            ], 200);
-
-        } catch (\Exception $e) {
-            Log::error('Error fetching assignments: ' . $e->getMessage());
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to fetch assignments',
-            ], 500);
-        }
+        // Return an error response
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Failed to fetch assignments',
+        ], 500);
     }
-
-
-     /**
-     * Send an email to the user notifying them of a new assignment.
-     *
-     * @param string $email
-     * @param Assignment $assignment
-     * @return void
-     */
-    private function sendNewAssignmentEmail($email, Assignment $assignment)
-    {
-        try {
-            // Send the email to the user
-            Mail::send('emails.new_assignment', ['assignment' => $assignment], function ($message) use ($email) {
-                $message->to($email)
-                    ->subject('New Assignment Assigned');
-            });
-
-            Log::info('New assignment email sent to ' . $email);
-        } catch (\Exception $e) {
-            Log::error('Error sending email: ' . $e->getMessage());
-        }
-    }
-
-
+}
 
 public function fetchcustomer()
 {
