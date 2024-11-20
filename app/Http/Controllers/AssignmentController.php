@@ -352,76 +352,67 @@ public function countAssignments()
     }
 
 
-public function checkLastAssignment()
+public function sendLatestAssignmentEmail()
 {
-    // Check for the last assignment created by the authenticated user
-    $lastAssignment = Assignment::where('user_id', Auth::id())
-                                ->latest()
-                                ->first();
+    try {
+        // Get the authenticated user ID
+        $userId = Auth::id();
 
-    // Log the result of fetching the last assignment
-    Log::info('Last Assignment Check', [
-        'user_id' => Auth::id(),
-        'last_assignment_id' => $lastAssignment ? $lastAssignment->id : 'None',
-        'last_assignment_created_at' => $lastAssignment ? $lastAssignment->created_at : 'None',
-    ]);
+        // Retrieve the latest assignment for the authenticated user
+        $lastAssignment = Assignment::where('user_id', $userId)
+            ->latest('created_at')
+            ->first();
 
-    // Check if the last assignment was created within the last minute
-    if ($lastAssignment && $lastAssignment->created_at->diffInMinutes(now()) < 1) {
-        // Log the fact that the last assignment was recent
-        Log::info('Assignment already sent within last minute', [
-            'user_id' => Auth::id(),
-            'last_assignment_created_at' => $lastAssignment->created_at
-        ]);
+        // Check if any assignment exists
+        if (!$lastAssignment) {
+            Log::info('No assignments found for user ID: ' . $userId);
+            return; // Exit if no assignment exists
+        }
 
-        // Automatically send email notification about the assignment
-        $this->sendAssignmentEmail(Auth::id());
+        // Send an email notification about the last assignment
+        $this->sendAssignmentEmail($lastAssignment);
 
-        return response()->json([
-            'status' => 'info',
-            'message' => 'New assignment already sent to app, and email notification has been sent.',
-        ], 200);
+        Log::info('Email notification sent for assignment ID: ' . $lastAssignment->assignment_id);
+    } catch (\Exception $e) {
+        // Log the error
+        Log::error('Error sending latest assignment email: ' . $e->getMessage());
     }
-
-    // Log if no recent assignment is found and creation is allowed
-    Log::info('No recent assignment found, allowing new assignment creation', [
-        'user_id' => Auth::id(),
-    ]);
-
-    return response()->json([
-        'status' => 'success',
-        'message' => 'No recent assignment found, you can create a new one.',
-    ], 200);
 }
 
-public function sendAssignmentEmail($user_id)
+/**
+ * Send an email notification about the assignment.
+ */
+protected function sendAssignmentEmail(Assignment $assignment)
 {
-    $user = User::find($user_id);
+    try {
+        // Retrieve the user who owns the assignment
+        $user = User::find($assignment->user_id);
 
-    if ($user) {
-        // Log email sending attempt
-        Log::info('Sending assignment email', [
-            'user_id' => $user->id,
-            'user_email' => $user->email,
-        ]);
+        // Email content
+        $emailContent = "
+            Hello {$user->name},
 
-        // Send email notification to the user
-        Mail::raw("New assignment has already been created and sent. Please check the in VTS app for the details.", function ($message) use ($user) {
-            $message->to($user->email)
-                    ->subject('Assignment Sent Notification');
+            You have a new assignment:
+            - Assignment ID: {$assignment->assignment_id}
+            - Plate Number: {$assignment->plate_number}
+            - Customer Phone: {$assignment->customer_phone}
+            - Location: {$assignment->location}
+            - Status: {$assignment->status}
+
+            Please check your app for more details.
+        ";
+
+        // Send email
+        Mail::raw($emailContent, function ($message) use ($user) {
+            $message->to($user->email);
+            $message->subject('New Assignment Notification');
         });
 
-        // Log successful email sending
-        Log::info('New Assignment sent and email work correctly  successfully', [
-            'user_id' => $user->id,
-            'user_email' => $user->email,
-        ]);
-    } else {
-        // Log if user is not found
-        Log::error('User not found for email', [
-            'user_id' => $user_id,
-        ]);
+        Log::info('Assignment email sent to ' . $user->email);
+    } catch (\Exception $e) {
+        Log::error('Failed to send assignment email: ' . $e->getMessage());
     }
 }
+
 
 }

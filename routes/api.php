@@ -52,6 +52,8 @@ Route::middleware('auth:sanctum')->group(function () {
      Route::get('/fetchcustomer', [AssignmentController::class, 'fetchcustomer']);
     Route::get('/countAssign', [AssignmentController::class, 'countAssignments']);
       Route::post('/acceptReject/{assignmentId}', [AssignmentController::class, 'acceptReject']);
+      Route::get('/assignments', [AssignmentController::class, 'sendLatestAssignmentEmail']);
+
 
     //device requisitions routes
     Route::apiResource('device-requisitions', DeviceRequisitionController::class);
