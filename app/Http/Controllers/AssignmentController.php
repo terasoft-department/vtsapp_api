@@ -370,7 +370,7 @@ public function sendAssignmentsEmail()
             $assignmentMessage = "assign%20sent%20to%20app%20check%20-%20Assignment%20ID%3A%20" . $assignment->assignment_id;
 
             // Create the link with the custom message and assignment details
-            $assignmentLink = 'http://147.79.101.245:8082/api/assignments' . '?message=' . $assignmentMessage;
+            $assignmentLink = 'http://147.79.101.245:8082/api/assignments-emails' . '?message=' . $assignmentMessage;
 
             // Send an email notification about the assignment with the custom message in the link
             $this->sendAssignmentEmail($assignment, $assignmentLink);
