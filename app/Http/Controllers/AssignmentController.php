@@ -351,35 +351,35 @@ public function countAssignments()
         }
     }
 
-
 public function sendAssignmentsEmail()
 {
     try {
-        // Retrieve all assignments from the database
-        $assignments = Assignment::latest('created_at') // Adjust the order as needed
+        // Retrieve all assignments created in the last 5 seconds
+        $recentAssignments = Assignment::where('created_at', '>=', Carbon::now()->subSeconds(5))
+            ->latest('created_at')
             ->get();
 
         // Check if any assignments exist
-        if ($assignments->isEmpty()) {
-            Log::info('No assignments found.');
-            return response()->json(['message' => 'No assignments found.'], 404); // Return 404 if no assignments
+        if ($recentAssignments->isEmpty()) {
+            Log::info('No new assignments found in the last 5 seconds.');
+            return response()->json(['message' => 'No new assignments found.'], 404); // Return 404 if no assignments found
         }
 
-        // Loop through each assignment and send an email
-        foreach ($assignments as $assignment) {
-            // Create a custom message to be attached in the link
+        // Loop through each recent assignment and send an email
+        foreach ($recentAssignments as $assignment) {
+            // Create the custom message to be attached in the link
             $assignmentMessage = "assign%20sent%20to%20app%20check%20-%20Assignment%20ID%3A%20" . $assignment->assignment_id;
 
             // Create the link with the custom message and assignment details
             $assignmentLink = 'http://147.79.101.245:8082/api/assignments-emails' . '?message=' . $assignmentMessage;
 
-            // Send an email notification about the assignment with the custom message in the link
+            // Send the assignment email to authenticated users
             $this->sendAssignmentEmail($assignment, $assignmentLink);
         }
 
-        Log::info('Assignment emails sent.');
+        Log::info('Assignment emails sent successfully.');
 
-        return response()->json(['message' => 'Assignments processed and emails sent.'], 200); // Return success message
+        return response()->json(['message' => 'Assignments processed and emails sent to users.'], 200); // Return success response
     } catch (\Exception $e) {
         // Log the error and send a generic response
         Log::error('Error sending assignment emails: ' . $e->getMessage());
@@ -393,11 +393,11 @@ public function sendAssignmentsEmail()
 protected function sendAssignmentEmail(Assignment $assignment, $assignmentLink)
 {
     try {
-        // Retrieve all users (or a specific user based on your criteria)
-        $users = User::all(); // Get all users, or you can adjust this query to target specific users
+        // Retrieve only authenticated users (assuming 'is_authenticated' is the flag for authentication)
+        $users = User::where('is_authenticated', true)->get(); // Adjust to your actual authenticated logic
 
         foreach ($users as $user) {
-            // Email content with the link containing the custom message
+            // Prepare email content with assignment details and the link
             $emailContent = "
                 Hello {$user->name},\n\n
                 You have a new assignment:\n
@@ -410,7 +410,7 @@ protected function sendAssignmentEmail(Assignment $assignment, $assignmentLink)
                 You can also follow this link for more details: {$assignmentLink}
             ";
 
-            // Send email
+            // Send the email
             Mail::raw($emailContent, function ($message) use ($user) {
                 $message->to($user->email);
                 $message->subject('New Assignment Notification');
@@ -418,7 +418,6 @@ protected function sendAssignmentEmail(Assignment $assignment, $assignmentLink)
 
             Log::info('Assignment email sent to ' . $user->email);
         }
-
     } catch (\Exception $e) {
         Log::error('Failed to send assignment email: ' . $e->getMessage());
     }

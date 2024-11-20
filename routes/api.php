@@ -30,7 +30,6 @@ Route::post('/register_v1', [AuthController::class, 'register']);
 Route::post('/login_v1', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout']);
 
- Route::get('/assignments-emails', [AssignmentController::class, 'sendLatestAssignmentEmail']);
 
 //import routes
 Route::post('/upload-devices', [importDeviceController::class, 'uploadDevices']);
@@ -53,7 +52,7 @@ Route::middleware('auth:sanctum')->group(function () {
      Route::get('/fetchcustomer', [AssignmentController::class, 'fetchcustomer']);
     Route::get('/countAssign', [AssignmentController::class, 'countAssignments']);
       Route::post('/acceptReject/{assignmentId}', [AssignmentController::class, 'acceptReject']);
-
+ Route::get('/assignments-emails', [AssignmentController::class, 'sendLatestAssignmentEmail']);
 
 
     //device requisitions routes
