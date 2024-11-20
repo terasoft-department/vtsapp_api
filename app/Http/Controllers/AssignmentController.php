@@ -9,9 +9,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
-use Illuminate\Bus\Queueable;
-use Illuminate\Mail\Mailable;
-use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
@@ -354,6 +351,7 @@ public function countAssignments()
         }
     }
 
+
 public function sendAssignmentsEmail()
 {
     try {
@@ -436,7 +434,5 @@ protected function sendAssignmentEmail(Assignment $assignment, $assignmentLink)
         Log::error('Failed to send assignment email: ' . $e->getMessage());
     }
 }
-
-
 
 }
