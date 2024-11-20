@@ -351,28 +351,17 @@ public function countAssignments()
         }
     }
 
-
 public function sendAssignmentsEmail()
 {
     try {
-        // Check if the user is authenticated via token
-        if (!Auth::check()) {
-            // If not authenticated, return Unauthorized response
-            return response()->json(['message' => 'Unauthorized user!!, Please!!! login to access the API'], 401);
-        }
-
-        // Get the authenticated user ID
-        $userId = Auth::id();
-
-        // Retrieve all assignments for the authenticated user
-        $assignments = Assignment::where('user_id', $userId)
-            ->latest('created_at') // Or adjust order as needed
+        // Retrieve all assignments from the database (or specify criteria if needed)
+        $assignments = Assignment::latest('created_at') // Adjust the order as needed
             ->get();
 
         // Check if any assignments exist
         if ($assignments->isEmpty()) {
-            Log::info('No assignments found for user ID: ' . $userId);
-            return response()->json(['message' => 'No assignments found for user.'], 404); // Return 404 if no assignments
+            Log::info('No assignments found.');
+            return response()->json(['message' => 'No assignments found.'], 404); // Return 404 if no assignments
         }
 
         // Loop through each assignment and send an email
@@ -387,7 +376,7 @@ public function sendAssignmentsEmail()
             $this->sendAssignmentEmail($assignment, $assignmentLink);
         }
 
-        Log::info('Assignment emails sent for user ID: ' . $userId);
+        Log::info('Assignment emails sent.');
 
         return response()->json(['message' => 'Assignments processed and emails sent.'], 200); // Return success message
     } catch (\Exception $e) {
@@ -403,10 +392,10 @@ public function sendAssignmentsEmail()
 protected function sendAssignmentEmail(Assignment $assignment, $assignmentLink)
 {
     try {
-        // Retrieve the user who owns the assignment
-        $user = User::find($assignment->user_id);
+        // Retrieve all users (or a specific user based on your criteria)
+        $users = User::all(); // Get all users, or you can adjust this query to target specific users
 
-        if ($user) {
+        foreach ($users as $user) {
             // Email content with the link containing the custom message
             $emailContent = "
                 Hello {$user->name},\n\n
@@ -427,12 +416,12 @@ protected function sendAssignmentEmail(Assignment $assignment, $assignmentLink)
             });
 
             Log::info('Assignment email sent to ' . $user->email);
-        } else {
-            Log::warning('No user found for assignment ID: ' . $assignment->assignment_id);
         }
+
     } catch (\Exception $e) {
         Log::error('Failed to send assignment email: ' . $e->getMessage());
     }
 }
+
 
 }
