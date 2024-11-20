@@ -1,7 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
+use App\Models\Assignment;
+use App\Mail\NewAssignmentMail;
+use Illuminate\Support\Facades\Mail;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -15,4 +17,15 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
+});
+
+
+Route::get('/send-assignment-email/{assignmentId}', function ($assignmentId) {
+    // Fetch the assignment based on the ID
+    $assignment = Assignment::findOrFail($assignmentId);
+
+    // Send the email to the user
+    Mail::to($assignment->user->email)->send(new NewAssignmentMail($assignment));
+
+    return 'Email sent successfully';
 });
