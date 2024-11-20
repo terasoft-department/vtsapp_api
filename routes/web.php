@@ -22,12 +22,3 @@ Route::get('/', function () {
 
 
 
-Route::get('/send-assignment-email/{assignmentId}', function ($assignmentId) {
-    // Fetch the assignment based on the ID
-    $assignment = Assignment::findOrFail($assignmentId);
-
-    // Send the email to the user
-    Mail::to($assignment->user->email)->send(new NewAssignmentMail($assignment));
-
-    return 'Email sent successfully';
-});

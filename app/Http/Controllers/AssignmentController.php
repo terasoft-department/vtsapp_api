@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
 class AssignmentController extends Controller
@@ -349,4 +350,78 @@ public function countAssignments()
             ], 500);
         }
     }
+
+
+public function checkLastAssignment()
+{
+    // Check for the last assignment created by the authenticated user
+    $lastAssignment = Assignment::where('user_id', Auth::id())
+                                ->latest()
+                                ->first();
+
+    // Log the result of fetching the last assignment
+    Log::info('Last Assignment Check', [
+        'user_id' => Auth::id(),
+        'last_assignment_id' => $lastAssignment ? $lastAssignment->id : 'None',
+        'last_assignment_created_at' => $lastAssignment ? $lastAssignment->created_at : 'None',
+    ]);
+
+    // Check if the last assignment was created within the last minute
+    if ($lastAssignment && $lastAssignment->created_at->diffInMinutes(now()) < 1) {
+        // Log the fact that the last assignment was recent
+        Log::info('Assignment already sent within last minute', [
+            'user_id' => Auth::id(),
+            'last_assignment_created_at' => $lastAssignment->created_at
+        ]);
+
+        // Automatically send email notification about the assignment
+        $this->sendAssignmentEmail(Auth::id());
+
+        return response()->json([
+            'status' => 'info',
+            'message' => 'New assignment already sent to app, and email notification has been sent.',
+        ], 200);
+    }
+
+    // Log if no recent assignment is found and creation is allowed
+    Log::info('No recent assignment found, allowing new assignment creation', [
+        'user_id' => Auth::id(),
+    ]);
+
+    return response()->json([
+        'status' => 'success',
+        'message' => 'No recent assignment found, you can create a new one.',
+    ], 200);
+}
+
+public function sendAssignmentEmail($user_id)
+{
+    $user = User::find($user_id);
+
+    if ($user) {
+        // Log email sending attempt
+        Log::info('Sending assignment email', [
+            'user_id' => $user->id,
+            'user_email' => $user->email,
+        ]);
+
+        // Send email notification to the user
+        Mail::raw("New assignment has already been created and sent. Please check the in VTS app for the details.", function ($message) use ($user) {
+            $message->to($user->email)
+                    ->subject('Assignment Sent Notification');
+        });
+
+        // Log successful email sending
+        Log::info('New Assignment sent and email work correctly  successfully', [
+            'user_id' => $user->id,
+            'user_email' => $user->email,
+        ]);
+    } else {
+        // Log if user is not found
+        Log::error('User not found for email', [
+            'user_id' => $user_id,
+        ]);
+    }
+}
+
 }
