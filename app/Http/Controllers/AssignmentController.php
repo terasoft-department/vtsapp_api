@@ -19,6 +19,11 @@ class AssignmentController extends Controller
         $this->middleware('auth:sanctum')->except(['register', 'login']);
     }
 
+    public function showAssignment()
+    {
+        return view('emails.assignment'); // Assuming you want to return 'emails.assignment' view
+    }
+
   public function index()
     {
         try {

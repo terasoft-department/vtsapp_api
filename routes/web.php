@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Models\Assignment;
 use App\Mail\NewAssignmentMail;
 use Illuminate\Support\Facades\Mail;
+use App\Http\Controllers\AssignmentController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -19,6 +20,8 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+
+Route::get('/', [AssignmentController::class, 'showAssignment']);
 
 Route::get('/send-assignment-email/{assignmentId}', function ($assignmentId) {
     // Fetch the assignment based on the ID
