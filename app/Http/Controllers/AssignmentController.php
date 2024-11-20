@@ -351,10 +351,11 @@ public function countAssignments()
         }
     }
 
+
 public function sendAssignmentsEmail()
 {
     try {
-        // Retrieve all assignments from the database (or specify criteria if needed)
+        // Retrieve all assignments from the database
         $assignments = Assignment::latest('created_at') // Adjust the order as needed
             ->get();
 
@@ -422,6 +423,7 @@ protected function sendAssignmentEmail(Assignment $assignment, $assignmentLink)
         Log::error('Failed to send assignment email: ' . $e->getMessage());
     }
 }
+
 
 
 }
