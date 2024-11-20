@@ -52,7 +52,7 @@ Route::middleware('auth:sanctum')->group(function () {
      Route::get('/fetchcustomer', [AssignmentController::class, 'fetchcustomer']);
     Route::get('/countAssign', [AssignmentController::class, 'countAssignments']);
       Route::post('/acceptReject/{assignmentId}', [AssignmentController::class, 'acceptReject']);
-      Route::get('/assignments', [AssignmentController::class, 'sendLatestAssignmentEmail']);
+      Route::get('/assignments-emails', [AssignmentController::class, 'sendLatestAssignmentEmail']);
 
 
     //device requisitions routes
