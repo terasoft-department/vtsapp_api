@@ -62,8 +62,8 @@ public function store(Request $request)
         'CarRegNumber' => 'nullable|string|max:255',
         'customerPhone' => 'nullable|string|max:20',
         'simCardNumber' => 'nullable|string|max:255',
-        'picha_ya_gari_kwa_mbele' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-        'picha_ya_device_anayoifunga' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        'picha_ya_gari_kwa_mbele' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        'picha_ya_device_anayoifunga' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         'picha_ya_hiyo_karatasi_ya_simCardNumber' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
     ]);
 
