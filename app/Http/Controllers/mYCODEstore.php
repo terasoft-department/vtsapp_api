@@ -106,16 +106,7 @@ class _AssignmentsState extends State<Assignments> {
     );
   }
 
-  Future<void> _logout() async {
-    await storage.delete(key: 'token'); // Clear token from FlutterSecureStorage
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) =>
-            AuthenticationPage(), // Replace with your login page
-      ),
-    );
-  }
+
 
   void _filterAssignments(String query) {
     setState(() {

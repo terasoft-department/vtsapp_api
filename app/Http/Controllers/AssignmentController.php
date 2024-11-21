@@ -22,14 +22,30 @@ class AssignmentController extends Controller
         $this->middleware('auth:sanctum')->except(['register', 'login']);
     }
 
-  public function index()
+
+public function index()
 {
     try {
+        // Ensure the user is authenticated
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
+        // Log user information for debugging
+        Log::info('Authenticated User:', ['user' => $user]);
+
+        $userEmail = $user->email;
+
         // Retrieve assignments for the logged-in user where status is null
-        $assignments = Assignment::with('customer') // Eager load the customer relationship
-            ->where('user_id', Auth::id()) // Filter by the logged-in user's user_id
-            ->whereNull('status') // Only include assignments where status is null
-            ->orderBy('assignment_id', 'desc') // Order by assignment_id descending
+        $assignments = Assignment::with('customer')  // Eager load the customer relationship
+            ->where('user_id', Auth::id())  // Filter by the logged-in user's user_id
+            ->where('customer_email', $userEmail)  // Match assignments based on email
+            ->whereNull('status')  // Only include assignments where status is null
+            ->orderBy('assignment_id', 'desc')  // Order by assignment_id descending
             ->get();
 
         // Map the assignments to include the customer name and days passed since created_at
@@ -47,9 +63,9 @@ class AssignmentController extends Controller
                 'case_reported'  => $assignment->case_reported,
                 'customer_debt'  => $assignment->customer_debt,
                 'assigned_by' => $assignment->assigned_by,
-                'customername' => $assignment->customer->customername ?? 'N/A', // Get customer name, or 'N/A' if not available
-                 'created_at' => $assignment->created_at->format('m-d-Y'),
-                'days_passed' => $daysPassed, // Add the days passed field
+                'customername' => $assignment->customer->customername ?? 'N/A',  // Get customer name or 'N/A' if not available
+                'created_at' => $assignment->created_at->format('m-d-Y'),
+                'days_passed' => $daysPassed,  // Add the days passed field
             ];
         });
 
@@ -58,6 +74,7 @@ class AssignmentController extends Controller
             'status' => 'success',
             'assignments' => $assignments,
         ], 200);
+
     } catch (\Exception $e) {
         // Log the error message
         Log::error('Error fetching assignments: ' . $e->getMessage());
@@ -69,6 +86,8 @@ class AssignmentController extends Controller
         ], 500);
     }
 }
+
+
 
 public function fetchcustomer()
 {
