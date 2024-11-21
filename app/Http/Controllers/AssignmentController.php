@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
+use App\Mail\NewAssignmentNotification;
+
 use Illuminate\Support\Facades\Validator;
 
 class AssignmentController extends Controller
@@ -104,6 +106,41 @@ public function fetchcustomer()
     }
 }
 
+
+
+    public function AssignmentNotification(Request $request)
+{
+    try {
+        // Retrieve assignments for the logged-in user, where status is not null
+        $assignments = Assignment::with('customer') // Eager load the customer relationship
+            ->where('assigned_to', $request->user()->email) // Filter by the logged-in user's email
+            ->whereNotNull('status') // Only include assignments where status is not null
+            ->orderBy('assignment_id', 'desc') // Order by assignment_id descending
+            ->get();
+
+        // Map the assignments to include customer_id and customername
+        $assignments = $assignments->map(function ($assignment) {
+            return [
+                'customer_id' => $assignment->customer->customer_id ?? 'N/A', // Get customer_id
+                'customername' => $assignment->customer->customername ?? 'N/A', // Get customer name
+                'plate_number' => $assignment->plate_number, // Include plate_number
+                'location' => $assignment->location, // Include location
+                'case_reported' => $assignment->case_reported, // Include case_reported
+                'assigned_by' => $assignment->assigned_by, // Include assigned_by
+                'status' => $assignment->status, // Include status
+            ];
+        });
+
+        // Send email notifications for each assignment
+        foreach ($assignments as $assignment) {
+            Mail::to($request->user()->email)->send(new NewAssignmentNotification($assignment));
+        }
+
+        return response()->json(['message' => 'Notifications sent successfully.']);
+    } catch (\Exception $e) {
+        return response()->json(['message' => 'Failed to send notifications.'], 500);
+    }
+}
 
 
 public function index1()
@@ -351,77 +388,7 @@ public function countAssignments()
         }
     }
 
-public function sendAssignmentsEmail()
-{
-    try {
-        // Retrieve all assignments created in the last 5 seconds
-        $recentAssignments = Assignment::where('created_at', '>=', Carbon::now()->subSeconds(5))
-            ->latest('created_at')
-            ->get();
 
-        // Check if any assignments exist
-        if ($recentAssignments->isEmpty()) {
-            Log::info('No new assignments found in the last 5 seconds.');
-            return response()->json(['message' => 'No new assignments found.'], 404); // Return 404 if no assignments found
-        }
-
-        // Loop through each recent assignment and send an email
-        foreach ($recentAssignments as $assignment) {
-            // Create the custom message to be attached in the link
-            $assignmentMessage = "assign%20sent%20to%20app%20check%20-%20Assignment%20ID%3A%20" . $assignment->assignment_id;
-
-            // Create the link with the custom message and assignment details
-            $assignmentLink = 'http://147.79.101.245:8082/api/assignments-emails' . '?message=' . $assignmentMessage;
-
-            // Send the assignment email to authenticated users
-            $this->sendAssignmentEmail($assignment, $assignmentLink);
-        }
-
-        Log::info('Assignment emails sent successfully.');
-
-        return response()->json(['message' => 'Assignments processed and emails sent to users.'], 200); // Return success response
-    } catch (\Exception $e) {
-        // Log the error and send a generic response
-        Log::error('Error sending assignment emails: ' . $e->getMessage());
-        return response()->json(['message' => 'Error sending assignment emails.'], 500);
-    }
-}
-
-/**
- * Send an email notification about the assignment with the custom message in the link.
- */
-protected function sendAssignmentEmail(Assignment $assignment, $assignmentLink)
-{
-    try {
-        // Retrieve only authenticated users (assuming 'is_authenticated' is the flag for authentication)
-        $users = User::where('is_authenticated', true)->get(); // Adjust to your actual authenticated logic
-
-        foreach ($users as $user) {
-            // Prepare email content with assignment details and the link
-            $emailContent = "
-                Hello {$user->name},\n\n
-                You have a new assignment:\n
-                - Assignment ID: {$assignment->assignment_id}\n
-                - Plate Number: {$assignment->plate_number}\n
-                - Customer Phone: {$assignment->customer_phone}\n
-                - Location: {$assignment->location}\n
-                - Status: {$assignment->status}\n\n
-                Please check your app for more details.\n\n
-                You can also follow this link for more details: {$assignmentLink}
-            ";
-
-            // Send the email
-            Mail::raw($emailContent, function ($message) use ($user) {
-                $message->to($user->email);
-                $message->subject('New Assignment Notification');
-            });
-
-            Log::info('Assignment email sent to ' . $user->email);
-        }
-    } catch (\Exception $e) {
-        Log::error('Failed to send assignment email: ' . $e->getMessage());
-    }
-}
 
 
 

@@ -2,56 +2,53 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:intl/intl.dart';
 
 import '../Dashboard.dart';
+import '../JobCards/Index.dart';
 import '../Login.dart';
 import '../Requsitions/Index.dart';
 import '../UserProfile.dart';
-import '../assiginments/Assignments.dart';
-import '../assiginments/History.dart';
 import '../check_lists/CheckLists.dart';
 import '../check_lists/CheckListsReport.dart';
 import '../device_returns/Index.dart';
+import '../installations/Index.dart';
 import '../stocks/Allstocks.dart';
-import 'AddJobCard.dart';
+import 'History.dart';
 
-class Jobcards extends StatefulWidget {
-  const Jobcards({super.key});
+class Assignments extends StatefulWidget {
+  const Assignments({super.key});
 
   @override
-  _JobcardsState createState() => _JobcardsState();
+  _AssignmentsState createState() => _AssignmentsState();
 }
 
-class _JobcardsState extends State<Jobcards> {
-  String userEmail = 'Loading...';
-  bool isLoading = true;
-  bool isFetchingData = false;
-  List<dynamic> jobCards = [];
+class _AssignmentsState extends State<Assignments> {
   final storage = FlutterSecureStorage();
+  List<dynamic> assignments = [];
+  List<dynamic> filteredAssignments = [];
+  bool isLoading = true;
+  String searchQuery = '';
 
   @override
   void initState() {
     super.initState();
-    _fetchUserEmail();
-    _fetchJobCards();
+    _fetchAssignments();
   }
 
-  Future<void> _fetchUserEmail() async {
+  Future<void> _fetchAssignments() async {
     try {
       final token = await storage.read(key: 'token');
+
       if (token == null) {
-        if (mounted) {
-          setState(() {
-            userEmail = 'Token not found';
-            isLoading = false;
-          });
-        }
+        _showToast('Token not found');
+        setState(() {
+          isLoading = false;
+        });
         return;
       }
 
       final response = await http.get(
-        Uri.parse('http://147.79.101.245:8082/api/get_login_user'),
+        Uri.parse('http://147.79.101.245:8082/api/assignments'),
         headers: {
           'Authorization': 'Bearer $token',
         },
@@ -59,302 +56,265 @@ class _JobcardsState extends State<Jobcards> {
 
       if (response.statusCode == 200) {
         final jsonResponse = json.decode(response.body);
-        if (mounted) {
-          setState(() {
-            userEmail =
-                jsonResponse['name'] ?? 'No Name Available'; // Handle null case
-            isLoading = false;
-          });
-        }
-      } else {
-        if (mounted) {
-          setState(() {
-            userEmail = 'Error fetching name';
-            isLoading = false;
-          });
-        }
-      }
-    } catch (error) {
-      if (mounted) {
         setState(() {
-          userEmail = 'An error occurred';
+          assignments = jsonResponse['assignments'] ?? [];
+          filteredAssignments = assignments;
+          isLoading = false;
+        });
+      } else {
+        _showToast('Error fetching assignments');
+        setState(() {
           isLoading = false;
         });
       }
+    } catch (error) {
+      _showToast('An error occurred');
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
+  Future<void> _updateAssignmentStatus(int assignmentId, String status) async {
+    final token = await storage.read(key: 'token');
 
-
-  Future<void> _fetchJobCards() async {
-    setState(() {
-      isFetchingData = true;
-    });
-
-    try {
-      final token = await storage.read(key: 'token');
-      if (token == null) {
-        if (mounted) {
-          setState(() {
-            isFetchingData = false;
-          });
-        }
-        return;
-      }
-
-      final response = await http.get(
-        Uri.parse('http://147.79.101.245:8082/api/jobcards'),
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final jsonResponse = json.decode(response.body);
-        if (mounted) {
-          setState(() {
-            jobCards = jsonResponse['job_cards'] ?? [];
-            isFetchingData = false;
-          });
-        }
-      } else {
-        if (mounted) {
-          setState(() {
-            jobCards = [];
-            isFetchingData = false;
-          });
-        }
-      }
-    } catch (error) {
-      if (mounted) {
-        setState(() {
-          jobCards = [];
-          isFetchingData = false;
-        });
-      }
+    if (token == null) {
+      _showToast('Token not found');
+      return;
     }
+
+    final response = await http.put(
+      Uri.parse('http://147.79.101.245:8082/api/assignments/$assignmentId'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: json.encode({'status': status}),
+    );
+
+    if (response.statusCode == 200) {
+      _showToast('Assignment $status successfully');
+      _fetchAssignments(); // Refresh the assignments list
+    } else {
+      _showToast('Error updating assignment status');
+    }
+  }
+
+  void _showToast(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  Future<void> _logout() async {
+    await storage.delete(key: 'token'); // Clear token from FlutterSecureStorage
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            AuthenticationPage(), // Replace with your login page
+      ),
+    );
+  }
+
+  void _filterAssignments(String query) {
+    setState(() {
+      searchQuery = query;
+      filteredAssignments = assignments.where((assignment) {
+        return assignment['plate_number']
+                .toString()
+                .toLowerCase()
+                .contains(query.toLowerCase()) ||
+            assignment['customername']
+                .toString()
+                .toLowerCase()
+                .contains(query.toLowerCase());
+      }).toList();
+    });
+  }
+
+  Future<void> _refreshData() async {
+    print("Refresh data called");
+    setState(() {
+      isLoading = true;
+    });
+    await _fetchAssignments();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) {}
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('JobCards', style: TextStyle(fontSize: 15.0)),
+        title: const Text(
+          'Assignments',
+          style: TextStyle(
+            fontSize: 15.0,
+          ),
+        ),
         elevation: 2,
         backgroundColor: Colors.blue,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: _fetchJobCards,
+            onPressed: _refreshData,
           ),
         ],
       ),
-      body: isFetchingData
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                // Button with blue background (appears once)
-                const SizedBox(
-                  height: 9.0,
-                ),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const AddJobCard(),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue, // Background color (blue)
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16.0, vertical: 12.0),
-                    ),
-                    child: const Text(
-                      'Submit Job Card',
-                      style: TextStyle(color: Colors.white),
+      body: RefreshIndicator(
+        onRefresh: _refreshData,
+        child: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: TextField(
+                      decoration: const InputDecoration(
+                        hintText: 'Search by Plate Number or Customer Name',
+                        border: OutlineInputBorder(),
+                      ),
+                      onChanged: _filterAssignments,
                     ),
                   ),
-                ),
-                // Spacing between the button and the job cards list
-                const SizedBox(height: 10.0),
-                Expanded(
-                  child: jobCards.isEmpty
-                      ? const Center(child: Text('No job card available'))
-                      : ListView.builder(
-                          itemCount: jobCards.length,
-                          itemBuilder: (context, index) {
-                            final jobCard = jobCards[index];
-                            return Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Card(
-                                elevation: 1.0,
-                                color: Colors.white,
-                                margin:
-                                    const EdgeInsets.symmetric(vertical: 8.0),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12.0),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Client Name: ${jobCard['customername']}',
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
+                  Expanded(
+                    child: filteredAssignments.isEmpty
+                        ? const Center(child: Text('No assignments found'))
+                        : SingleChildScrollView(
+                            scrollDirection: Axis.vertical,
+                            child: Column(
+                              children: filteredAssignments.map((assignment) {
+                                return Card(
+                                  color: Colors.white,
+                                  margin: const EdgeInsets.all(8.0),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                'PlateNumber: ${assignment['plate_number']}',
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                              Text(
+                                                'Client: ${assignment['customername']}',
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                              Text(
+                                                'Customer Phone: ${assignment['customer_phone']}',
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                              Text(
+                                                'Location: ${assignment['location']}',
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                              Text(
+                                                assignment['customer_debt'] == 0
+                                                    ? 'Paid'
+                                                    : 'Debt: ${assignment['customer_debt']}',
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                              Text(
+                                                'AssignmentType: ${assignment['case_reported']}',
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                              Text(
+                                                'Status: ${assignment['status'] ?? 'pending'}',
+                                                style: const TextStyle(
+                                                    color: Colors.green,
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ),
+                                              Text(
+                                                'Created At: ${assignment['created_at']}',
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                              Text(
+                                                'AssignedBy: ${assignment['assigned_by']}',
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                              Text(
+                                                'Days Passed: ${assignment['days_passed']}',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                      Text(
-                                        'Device Number: ${jobCard['imei_number']}',
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
+                                        const SizedBox(
+                                            width:
+                                                20), // Space between text and buttons
+                                        Column(
+                                          children: [
+                                            ElevatedButton(
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: Colors
+                                                    .green, // Background color for cancel
+                                                foregroundColor:
+                                                    Colors.white, // Text color
+                                              ),
+                                              onPressed: () =>
+                                                  _updateAssignmentStatus(
+                                                      assignment[
+                                                          'assignment_id'],
+                                                      'accepted'),
+                                              child: const Text('Accept'),
+                                            ),
+                                            const SizedBox(
+                                                height:
+                                                    8), // Space between buttons
+                                            ElevatedButton(
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: Colors
+                                                    .red, // Background color for cancel
+                                                foregroundColor:
+                                                    Colors.white, // Text color
+                                              ),
+                                              onPressed: () =>
+                                                  _updateAssignmentStatus(
+                                                      assignment[
+                                                          'assignment_id'],
+                                                      'not-accepted'),
+                                              child: const Text('Decline'),
+                                            ),
+                                          ],
                                         ),
-                                      ),
-                                      Text(
-                                        'Car PlateNumber: ${jobCard['plate_number']}',
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        'Contact Person: ${jobCard['contact_person']}',
-                                        style: const TextStyle(fontSize: 14),
-                                      ),
-                                      Text(
-                                        'Title: ${jobCard['title']}',
-                                        style: const TextStyle(fontSize: 14),
-                                      ),
-                                      Text(
-                                        'Mobile: ${jobCard['mobile_number']}',
-                                        style: const TextStyle(fontSize: 14),
-                                      ),
-                                      Text(
-                                        'Location: ${jobCard['physical_location']}',
-                                        style: const TextStyle(fontSize: 14),
-                                      ),
-                                      Text(
-                                        'Problem Reported: ${jobCard['problem_reported']}',
-                                        style: const TextStyle(fontSize: 14),
-                                      ),
-                                      Text(
-                                        'Nature of Problem: ${jobCard['natureOf_ProblemAt_site']}',
-                                        style: const TextStyle(fontSize: 14),
-                                      ),
-                                      Text(
-                                        'Service Type: ${jobCard['service_type']}',
-                                        style: const TextStyle(fontSize: 14),
-                                      ),
-                                      Text(
-                                        'Date Attended: ${jobCard['date_attended']}',
-                                        style: const TextStyle(fontSize: 14),
-                                      ),
-                                      Text(
-                                        'Work Done: ${jobCard['work_done']}',
-                                        style: const TextStyle(fontSize: 14),
-                                      ),
-                                      Text(
-                                        'Client Comment: ${jobCard['client_comment']}',
-                                        style: const TextStyle(fontSize: 14),
-                                      ),
-                                      Text(
-                                        () {
-                                          // Parse the created_at string to DateTime and convert to UTC
-                                          final dateTimeUtc = DateTime.parse(
-                                                  jobCard['created_at'])
-                                              .toUtc();
-
-                                          // Convert UTC to East Africa Time (Nairobi/Dar es Salaam UTC+3)
-                                          final dateTimeLocal = dateTimeUtc
-                                              .add(Duration(hours: 3));
-                                          final hour = dateTimeLocal.hour;
-
-                                          // Format the date and time in 24-hour format
-                                          final formattedDate =
-                                              DateFormat('yyyy-MM-dd')
-                                                  .format(dateTimeLocal);
-                                          final formattedTime =
-                                              DateFormat('HH:mm')
-                                                  .format(dateTimeLocal);
-
-                                          // Determine the time of day with clear labels
-                                          String timeOfDay;
-                                          if (hour >= 5 && hour < 12) {
-                                            timeOfDay = 'Morning';
-                                          } else if (hour >= 12 && hour < 17) {
-                                            timeOfDay = 'Afternoon';
-                                          } else if (hour >= 17 && hour < 20) {
-                                            timeOfDay = 'Evening';
-                                          } else {
-                                            timeOfDay = 'Night';
-                                          }
-
-                                          // Return the complete string with clear formatting
-                                          return 'Created on $formattedDate at $formattedTime ($timeOfDay)';
-                                        }(),
-                                        style: const TextStyle(fontSize: 14),
-                                      ),
-                                      const SizedBox(height: 10),
-                                      _buildImageSection(
-                                        'Pre-Workdone Picture',
-                                        jobCard['pre_workdone_picture'],
-                                      ),
-                                      _buildImageSection(
-                                        'Post-Workdone Picture',
-                                        jobCard['post_workdone_picture'],
-                                      ),
-                                      _buildImageSection(
-                                        'Car Plate Number Picture',
-                                        jobCard['carPlateNumber_picture'],
-                                      ),
-                                      _buildImageSection(
-                                        'Tampering Evidence Picture',
-                                        jobCard['tampering_evidence_picture'],
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                ),
-              ],
-            ),
-    );
-  }
-
-  // Function to build images
-  Widget _buildImageSection(String title, String? imageUrl) {
-    // Make imageUrl nullable
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        imageUrl != null && imageUrl.isNotEmpty // Check for null and empty
-            ? ClipRRect(
-                borderRadius: BorderRadius.circular(8.0),
-                child: Image.network(
-                  imageUrl,
-                  width: double.infinity,
-                  height: 150, // Adjusted height for images
-                  fit: BoxFit.cover, // Maintain aspect ratio
-                ),
-              )
-            : const Text('No Image Available'),
-        const SizedBox(height: 16), // Add spacing between sections
-      ],
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                  ),
+                ],
+              ),
+      ),
     );
   }
 }
