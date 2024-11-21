@@ -30,7 +30,7 @@ class AssignmentController extends Controller
             ->where('user_id', Auth::id()) // Filter by the logged-in user's user_id
             ->whereNull('status') // Only include assignments where status is null
             ->orderBy('assignment_id', 'desc') // Order by assignment_id descending
-            ->join('users', 'assignments.user_id', '=', 'users.id') // Join with the users table on user_id
+            ->join('users', 'assignments.user_id', '=', 'users.user_id') // Join with the users table using user_id
             ->select('assignments.*', 'users.email') // Select all fields from assignments and email from users
             ->get();
 
@@ -72,6 +72,7 @@ class AssignmentController extends Controller
         ], 500);
     }
 }
+
 
 
 public function fetchcustomer()
