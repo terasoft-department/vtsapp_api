@@ -49,7 +49,7 @@ class AssignmentController extends Controller
                 'assigned_by' => $assignment->assigned_by,
                 'customername' => $assignment->customer->customername ?? 'N/A', // Get customer name, or 'N/A' if not available
                 'created_at' => $assignment->created_at->format('m-d-Y'),
-                'email' => $assignment->user ? $assignment->user->email : 'Unknown email', // Access user's email safely
+                'email' => $assignment->user->email ?? 'N/A',
                 'days_passed' => $daysPassed, // Add the days passed field
             ];
         });
