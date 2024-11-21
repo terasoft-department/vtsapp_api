@@ -26,7 +26,7 @@ class AssignmentController extends Controller
 {
     try {
         // Retrieve assignments for the logged-in user where status is null
-        $assignments = Assignment::with('customer') // Eager load the customer relationship
+        $assignments = Assignment::with('customer','user') // Eager load the customer relationship
             ->where('user_id', Auth::id()) // Filter by the logged-in user's user_id
             ->whereNull('status') // Only include assignments where status is null
             ->orderBy('assignment_id', 'desc') // Order by assignment_id descending
@@ -49,6 +49,7 @@ class AssignmentController extends Controller
                 'assigned_by' => $assignment->assigned_by,
                 'customername' => $assignment->customer->customername ?? 'N/A', // Get customer name, or 'N/A' if not available
                  'created_at' => $assignment->created_at->format('m-d-Y'),
+                 'user_email' => $assignment->user->email ?? 'Unknown email',
                 'days_passed' => $daysPassed, // Add the days passed field
             ];
         });
