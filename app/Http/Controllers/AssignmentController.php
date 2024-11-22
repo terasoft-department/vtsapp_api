@@ -22,7 +22,8 @@ class AssignmentController extends Controller
         $this->middleware('auth:sanctum')->except(['register', 'login']);
     }
 
-  public function index()
+
+public function index()
 {
     try {
         // Retrieve assignments for the logged-in user where status is null
@@ -34,7 +35,6 @@ class AssignmentController extends Controller
 
         // Map the assignments to include customer name, user email, and days passed since created_at
         $assignments = $assignments->map(function ($assignment) {
-            // Calculate the days passed since the assignment was created
             $daysPassed = Carbon::parse($assignment->created_at)->diffInDays(Carbon::now());
 
             return [
@@ -47,23 +47,20 @@ class AssignmentController extends Controller
                 'case_reported' => $assignment->case_reported,
                 'customer_debt' => $assignment->customer_debt,
                 'assigned_by' => $assignment->assigned_by,
-                'customername' => $assignment->customer->customername ?? 'N/A', // Get customer name, or 'N/A' if not available
-                'user_email' => $assignment->user->email ?? 'N/A', // Get user email, or 'N/A' if not available
+                'customername' => $assignment->customer->customername ?? 'N/A',
+                'user_email' => $assignment->user->email ?? 'N/A', // Include user email
                 'created_at' => $assignment->created_at->format('m-d-Y'),
-                'days_passed' => $daysPassed, // Add the days passed field
+                'days_passed' => $daysPassed,
             ];
         });
 
-        // Return the assignments as JSON
         return response()->json([
             'status' => 'success',
             'assignments' => $assignments,
         ], 200);
     } catch (\Exception $e) {
-        // Log the error message
         Log::error('Error fetching assignments: ' . $e->getMessage());
 
-        // Return an error response
         return response()->json([
             'status' => 'error',
             'message' => 'Failed to fetch assignments',
