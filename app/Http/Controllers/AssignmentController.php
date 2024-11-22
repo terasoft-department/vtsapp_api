@@ -22,7 +22,6 @@ class AssignmentController extends Controller
         $this->middleware('auth:sanctum')->except(['register', 'login']);
     }
 
-
 public function index()
 {
     try {
@@ -36,6 +35,15 @@ public function index()
         // Map the assignments to include customer name, user email, and days passed since created_at
         $assignments = $assignments->map(function ($assignment) {
             $daysPassed = Carbon::parse($assignment->created_at)->diffInDays(Carbon::now());
+
+            // Automatically send email notifications to the user
+            if ($assignment->user && $assignment->user->email) {
+                $this->sendEmailNotification(
+                    $assignment->user->email,
+                    'New Assignment Notification',
+                    "You have a new assignment: {$assignment->case_reported} located at {$assignment->location}"
+                );
+            }
 
             return [
                 'assignment_id' => $assignment->assignment_id,
@@ -67,6 +75,29 @@ public function index()
         ], 500);
     }
 }
+
+/**
+ * Send an email notification.
+ *
+ * @param string $recipient
+ * @param string $subject
+ * @param string $body
+ * @return void
+ */
+protected function sendEmailNotification($recipient, $subject, $body)
+{
+    try {
+        // Set up the email
+        Mail::raw($body, function ($message) use ($recipient, $subject) {
+            $message->to($recipient)
+                ->subject($subject)
+                ->from(config('mail.from.address'), config('mail.from.name')); // Use FROM settings from .env
+        });
+    } catch (\Exception $e) {
+        Log::error('Failed to send email: ' . $e->getMessage());
+    }
+}
+
 
 
 public function fetchcustomer()
