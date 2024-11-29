@@ -25,7 +25,8 @@ class Assignment extends Model
         'assigned_by',
         'case_reported',
         'customer_debt',
-        'accepted_at'
+        'accepted_at',
+        'return_comment'
     ];
 
     // Specify the table name if it's different from the plural of the model name

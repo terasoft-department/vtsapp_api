@@ -317,7 +317,8 @@ public function show($id)
  public function update(Request $request, $id)
 {
     $validator = Validator::make($request->all(), [
-        'status' => 'required|string|in:accepted,rejected',
+        'status' => 'nullable|string',
+        'return_comment' => 'nullable|string',
     ]);
 
     if ($validator->fails()) {

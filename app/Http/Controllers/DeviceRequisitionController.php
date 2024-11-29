@@ -137,6 +137,7 @@ public function store(Request $request)
         }
     }
 
+
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
