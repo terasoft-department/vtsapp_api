@@ -199,6 +199,7 @@ public function index1()
                 'case_reported' => $assignment->case_reported,
                 'customer_debt' => $assignment->customer_debt,
                 'assigned_by' => $assignment->assigned_by,
+                'return_comment' => $assignment->return_comment ?? 'N/A',
                 'customername' => $assignment->customer->customername ?? 'N/A', // Get customer name, or 'N/A' if not available
                 'created_at' => $createdAt ? $createdAt->format('m-d-Y') : null, // Format only if not null
                 'accepted_at' => $assignment->accepted_at
@@ -318,7 +319,6 @@ public function show($id)
 {
     $validator = Validator::make($request->all(), [
         'status' => 'nullable|string',
-        'return_comment' => 'nullable|string',
     ]);
 
     if ($validator->fails()) {
@@ -367,6 +367,62 @@ public function show($id)
         ], 500);
     }
 }
+
+public function UpdateComment(Request $request, $assignment_id)
+{
+    $validator = Validator::make($request->all(), [
+        'return_comment' => 'nullable|string',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Validation error',
+            'errors' => $validator->errors(),
+        ], 422);
+    }
+
+    try {
+        // Fetch the assignment ensuring it belongs to the logged-in user
+        $assignment = Assignment::where('assignment_id', $assignment_id)
+            ->where('user_id', Auth::id())
+            ->first();
+
+        if (!$assignment) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Assignment not found',
+            ], 404);
+        }
+
+        // Update the assignment's status
+        $assignment->status = $request->input('status');
+
+        // Update the return_comment if provided
+        $assignment->return_comment = $request->input('return_comment', $assignment->return_comment);
+
+        // Check if the status is "accepted" and set the accepted_at timestamp
+        if ($request->input('status') == 'accepted') {
+            $assignment->accepted_at = Carbon::now('Africa/Nairobi'); // East Africa Time
+        }
+
+        $assignment->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Assignment updated successfully',
+            'assignment' => $assignment,
+        ], 200);
+    } catch (\Exception $e) {
+        Log::error('Error updating assignment: ' . $e->getMessage());
+
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Failed to update assignment',
+        ], 500);
+    }
+}
+
 
 
    public function destroy($id)
