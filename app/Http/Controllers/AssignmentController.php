@@ -370,6 +370,7 @@ public function show($id)
 
 public function UpdateComment(Request $request, $assignment_id)
 {
+    // Validate the input to ensure 'return_comment' is a string and nullable
     $validator = Validator::make($request->all(), [
         'return_comment' => 'nullable|string',
     ]);
@@ -383,37 +384,32 @@ public function UpdateComment(Request $request, $assignment_id)
     }
 
     try {
-        // Fetch the assignment ensuring it belongs to the logged-in user
+        // Fetch the assignment ensuring it belongs to the logged-in user (by user_id)
         $assignment = Assignment::where('assignment_id', $assignment_id)
-            ->where('user_id', Auth::id())
+            ->where('user_id', Auth::id()) // Ensure the logged-in user owns the assignment
             ->first();
 
         if (!$assignment) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Assignment not found',
+                'message' => 'Assignment not found or you do not have permission to update it',
             ], 404);
         }
 
-        // Update the assignment's status
-        $assignment->status = $request->input('status');
-
-        // Update the return_comment if provided
+        // Only update the return_comment
         $assignment->return_comment = $request->input('return_comment', $assignment->return_comment);
 
-        // Check if the status is "accepted" and set the accepted_at timestamp
-        if ($request->input('status') == 'accepted') {
-            $assignment->accepted_at = Carbon::now('Africa/Nairobi'); // East Africa Time
-        }
-
+        // Save the updated assignment
         $assignment->save();
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Assignment updated successfully',
+            'message' => 'Comment updated successfully',
             'assignment' => $assignment,
         ], 200);
+
     } catch (\Exception $e) {
+        // Log the error and return a generic failure message
         Log::error('Error updating assignment: ' . $e->getMessage());
 
         return response()->json([
@@ -422,6 +418,7 @@ public function UpdateComment(Request $request, $assignment_id)
         ], 500);
     }
 }
+
 
 
 
